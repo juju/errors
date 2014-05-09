@@ -1,25 +1,24 @@
-package errors
+package errors_test
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"testing"
 
 	gc "launchpad.net/gocheck"
+
+	"github.com/juju/errors"
 )
 
-func Test(t *testing.T) { gc.TestingT(t) }
+type annotationSuite struct{}
 
-type arrarSuite struct{}
-
-var _ = gc.Suite(&arrarSuite{})
+var _ = gc.Suite(&annotationSuite{})
 
 func echo(value interface{}) interface{} {
 	return value
 }
 
-func (*arrarSuite) TestErrorString(c *gc.C) {
+func (*annotationSuite) TestErrorString(c *gc.C) {
 	for i, test := range []struct {
 		message   string
 		generator func() error
@@ -28,34 +27,34 @@ func (*arrarSuite) TestErrorString(c *gc.C) {
 		{
 			message: "uncomparable errors",
 			generator: func() error {
-				err := Annotatef(newNonComparableError("uncomparable"), "annotation")
-				return Annotatef(err, "another")
+				err := errors.Annotatef(newNonComparableError("uncomparable"), "annotation")
+				return errors.Annotatef(err, "another")
 			},
-			expected: "another, annotation: uncomparable",
+			expected: "another: annotation: uncomparable",
 		}, {
 			message: "Errorf",
 			generator: func() error {
-				return Errorf("first error")
+				return errors.Errorf("first error")
 			},
 			expected: "first error",
 		}, {
 			message: "annotating nil",
 			generator: func() error {
-				return Annotatef(nil, "annotation")
+				return errors.Annotatef(nil, "annotation")
 			},
 			expected: "annotation",
 		}, {
 			message: "annotated error",
 			generator: func() error {
-				err := Errorf("first error")
-				return Annotatef(err, "annotation")
+				err := errors.Errorf("first error")
+				return errors.Annotatef(err, "annotation")
 			},
 			expected: "annotation: first error",
 		}, {
 			message: "test annotation format",
 			generator: func() error {
-				err := Errorf("first %s", "error")
-				return Annotatef(err, "%s", "annotation")
+				err := errors.Errorf("first %s", "error")
+				return errors.Annotatef(err, "%s", "annotation")
 			},
 			expected: "annotation: first error",
 		}, {
@@ -63,32 +62,32 @@ func (*arrarSuite) TestErrorString(c *gc.C) {
 			generator: func() error {
 				//first := Errorf("first error")
 				err := newError("first error")
-				return Wrap(err, newError("more detail"))
+				return errors.Wrap(err, newError("more detail"))
 			},
 			expected: "more detail (first error)",
 		}, {
 			message: "wrapped annotated error",
 			generator: func() error {
-				err := Errorf("first error")
-				err = Annotatef(err, "annotated")
-				return Wrap(err, fmt.Errorf("more detail"))
+				err := errors.Errorf("first error")
+				err = errors.Annotatef(err, "annotated")
+				return errors.Wrap(err, fmt.Errorf("more detail"))
 			},
 			expected: "more detail (annotated: first error)",
 		}, {
 			message: "annotated wrapped error",
 			generator: func() error {
-				err := Errorf("first error")
-				err = Wrap(err, fmt.Errorf("more detail"))
-				return Annotatef(err, "annotated")
+				err := errors.Errorf("first error")
+				err = errors.Wrap(err, fmt.Errorf("more detail"))
+				return errors.Annotatef(err, "annotated")
 			},
 			expected: "annotated: more detail (first error)",
 		}, {
 			message: "annotated wrapped annotated error",
 			generator: func() error {
-				err := Errorf("first error")
-				err = Annotatef(err, "annotated")
-				err = Wrap(err, fmt.Errorf("more detail"))
-				return Annotatef(err, "context")
+				err := errors.Errorf("first error")
+				err = errors.Annotatef(err, "annotated")
+				err = errors.Wrap(err, fmt.Errorf("more detail"))
+				return errors.Annotatef(err, "context")
 			},
 			expected: "context: more detail (annotated: first error)",
 		},
@@ -102,18 +101,18 @@ func (*arrarSuite) TestErrorString(c *gc.C) {
 	}
 }
 
-func (*arrarSuite) TestAnnotatedErrorCheck(c *gc.C) {
+func (*annotationSuite) TestAnnotatedErrorCheck(c *gc.C) {
 	// Look for a file that we know isn't there.
 	dir := c.MkDir()
 	_, err := os.Stat(filepath.Join(dir, "not-there"))
 	c.Assert(os.IsNotExist(err), gc.Equals, true)
-	c.Assert(Check(err, os.IsNotExist), gc.Equals, true)
+	c.Assert(errors.Check(err, os.IsNotExist), gc.Equals, true)
 
-	err = Annotatef(err, "wrap it")
+	err = errors.Annotatef(err, "wrap it")
 	// Now the error itself isn't a 'IsNotExist'.
 	c.Assert(os.IsNotExist(err), gc.Equals, false)
 	// However if we use the Check method, it is.
-	c.Assert(Check(err, os.IsNotExist), gc.Equals, true)
+	c.Assert(errors.Check(err, os.IsNotExist), gc.Equals, true)
 }
 
 // This is an uncomparable error type, as it is a struct that supports the

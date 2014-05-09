@@ -1,5 +1,5 @@
-// Copyright 2013 Canonical Ltd.
-// Licensed under the AGPLv3, see LICENCE file for details.
+// Copyright 2013, 2014 Canonical Ltd.
+// Licensed under the GPLv3, see LICENCE file for details.
 
 package errors_test
 
@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"reflect"
 	"runtime"
-	"testing"
 
 	jc "github.com/juju/testing/checkers"
 	gc "launchpad.net/gocheck"
@@ -39,10 +38,6 @@ var allErrors = []*errorInfo{
 type errorsSuite struct{}
 
 var _ = gc.Suite(&errorsSuite{})
-
-func Test(t *testing.T) {
-	gc.TestingT(t)
-}
 
 func (t *errorInfo) satisfierName() string {
 	value := reflect.ValueOf(t.satisfier)
