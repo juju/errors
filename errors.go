@@ -28,6 +28,12 @@ func (e *Err) Error() string {
 	return fmt.Sprintf("%s: %v", e.Message_, e.Cause_)
 }
 
+// Cause returns the cause of the given error.  If err does not implement
+// errgo.Causer or its Cause method returns nil, it returns err itself.
+func Cause(err error) error {
+	return errgo.Cause(err)
+}
+
 // newer is implemented by error types that can add a context message
 // while preserving their type.
 type newer interface {
@@ -36,12 +42,14 @@ type newer interface {
 
 // wrap is a helper to construct an *wrapper.
 func wrap(err error, format, suffix string, args ...interface{}) Err {
-	return Err{
+	newErr := Err{
 		errgo.Err{
 			Message_:    fmt.Sprintf(format+suffix, args...),
 			Underlying_: err,
 		},
 	}
+	newErr.SetLocation(2)
+	return newErr
 }
 
 // Contextf prefixes any error stored in err with text formatted
@@ -69,14 +77,8 @@ func Maskf(err *error, format string, args ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf(format, args...)
-	newErr := &Err{
-		errgo.Err{
-			Message_:    fmt.Sprintf("%s: %v", msg, *err),
-			Underlying_: *err,
-		},
-	}
-	newErr.SetLocation(1)
-	*err = newErr
+	newErr := wrap(*err, "%s: %v", "", msg, *err)
+	*err = &newErr
 }
 
 // notFound represents an error when something has not been found.
@@ -90,17 +92,13 @@ func (e *notFound) new(msg string) error {
 
 // NotFoundf returns an error which satisfies IsNotFound().
 func NotFoundf(format string, args ...interface{}) error {
-	err := &notFound{wrap(nil, format, " not found", args...)}
-	err.SetLocation(1)
-	return err
+	return &notFound{wrap(nil, format, " not found", args...)}
 }
 
 // NewNotFound returns an error which wraps err that satisfies
 // IsNotFound().
 func NewNotFound(err error, msg string) error {
-	newErr := &notFound{wrap(err, msg, "")}
-	newErr.SetLocation(1)
-	return newErr
+	return &notFound{wrap(err, msg, "")}
 }
 
 // IsNotFound reports whether err was created with NotFoundf() or
@@ -122,17 +120,13 @@ func (e *unauthorized) new(msg string) error {
 
 // Unauthorizedf returns an error which satisfies IsUnauthorized().
 func Unauthorizedf(format string, args ...interface{}) error {
-	err := &unauthorized{wrap(nil, format, "", args...)}
-	err.SetLocation(1)
-	return err
+	return &unauthorized{wrap(nil, format, "", args...)}
 }
 
 // NewUnauthorized returns an error which wraps err and satisfies
 // IsUnauthorized().
 func NewUnauthorized(err error, msg string) error {
-	newErr := &unauthorized{wrap(err, msg, "")}
-	newErr.SetLocation(1)
-	return newErr
+	return &unauthorized{wrap(err, msg, "")}
 }
 
 // IsUnauthorized reports whether err was created with Unauthorizedf() or
@@ -155,17 +149,13 @@ func (e *notImplemented) new(msg string) error {
 
 // NotImplementedf returns an error which satisfies IsNotImplemented().
 func NotImplementedf(format string, args ...interface{}) error {
-	err := &notImplemented{wrap(nil, format, " not implemented", args...)}
-	err.SetLocation(1)
-	return err
+	return &notImplemented{wrap(nil, format, " not implemented", args...)}
 }
 
 // NewNotImplemented returns an error which wraps err and satisfies
 // IsNotImplemented().
 func NewNotImplemented(err error, msg string) error {
-	newErr := &notImplemented{wrap(err, msg, "")}
-	newErr.SetLocation(1)
-	return newErr
+	return &notImplemented{wrap(err, msg, "")}
 }
 
 // IsNotImplemented reports whether err was created with
@@ -187,17 +177,13 @@ func (e *alreadyExists) new(msg string) error {
 
 // AlreadyExistsf returns an error which satisfies IsAlreadyExists().
 func AlreadyExistsf(format string, args ...interface{}) error {
-	err := &alreadyExists{wrap(nil, format, " already exists", args...)}
-	err.SetLocation(1)
-	return err
+	return &alreadyExists{wrap(nil, format, " already exists", args...)}
 }
 
 // NewAlreadyExists returns an error which wraps err and satisfies
 // IsAlreadyExists().
 func NewAlreadyExists(err error, msg string) error {
-	newErr := &alreadyExists{wrap(err, msg, "")}
-	newErr.SetLocation(1)
-	return newErr
+	return &alreadyExists{wrap(err, msg, "")}
 }
 
 // IsAlreadyExists reports whether the error was created with
@@ -219,17 +205,13 @@ func (e *notSupported) new(msg string) error {
 
 // NotSupportedf returns an error which satisfies IsNotSupported().
 func NotSupportedf(format string, args ...interface{}) error {
-	err := &notSupported{wrap(nil, format, " not supported", args...)}
-	err.SetLocation(1)
-	return err
+	return &notSupported{wrap(nil, format, " not supported", args...)}
 }
 
 // NewNotSupported returns an error which wraps err and satisfies
 // IsNotSupported().
 func NewNotSupported(err error, msg string) error {
-	newErr := &notSupported{wrap(err, msg, "")}
-	newErr.SetLocation(1)
-	return newErr
+	return &notSupported{wrap(err, msg, "")}
 }
 
 // IsNotSupported reports whether the error was created with

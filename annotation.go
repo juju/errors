@@ -9,6 +9,18 @@ import (
 	"github.com/juju/errgo"
 )
 
+// New is a drop in replacement for the standard libary errors module that records
+// the location that the error is created.
+//
+// For example:
+//    return errors.New("validation failed")
+//
+func New(message string) error {
+	err := &Err{errgo.Err{Message_: message}}
+	err.SetLocation(1)
+	return err
+}
+
 // Errorf creates a new annotated error and records the location that the
 // error is created.  This should be a drop in replacement for fmt.Errorf.
 //
@@ -30,7 +42,7 @@ func Errorf(format string, args ...interface{}) error {
 //   }
 //
 func Trace(other error) error {
-	err := &Err{errgo.Err{Underlying_: other}}
+	err := &Err{errgo.Err{Underlying_: other, Cause_: other}}
 	err.SetLocation(1)
 	return err
 }
