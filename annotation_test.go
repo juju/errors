@@ -65,34 +65,25 @@ func (*annotationSuite) TestErrorString(c *gc.C) {
 			generator: func() error {
 				//first := Errorf("first error")
 				err := newError("first error")
-				return errors.Wrap(err, newError("more detail"))
+				return errors.Wrap(err, newError("detailed error"))
 			},
-			expected: "more detail (first error)",
+			expected: "detailed error",
 		}, {
 			message: "wrapped annotated error",
 			generator: func() error {
 				err := errors.Errorf("first error")
 				err = errors.Annotatef(err, "annotated")
-				return errors.Wrap(err, fmt.Errorf("more detail"))
+				return errors.Wrap(err, fmt.Errorf("detailed error"))
 			},
-			expected: "more detail (annotated: first error)",
+			expected: "detailed error",
 		}, {
 			message: "annotated wrapped error",
 			generator: func() error {
 				err := errors.Errorf("first error")
-				err = errors.Wrap(err, fmt.Errorf("more detail"))
+				err = errors.Wrap(err, fmt.Errorf("detailed error"))
 				return errors.Annotatef(err, "annotated")
 			},
-			expected: "annotated: more detail (first error)",
-		}, {
-			message: "annotated wrapped annotated error",
-			generator: func() error {
-				err := errors.Errorf("first error")
-				err = errors.Annotatef(err, "annotated")
-				err = errors.Wrap(err, fmt.Errorf("more detail"))
-				return errors.Annotatef(err, "context")
-			},
-			expected: "context: more detail (annotated: first error)",
+			expected: "annotated: detailed error",
 		},
 	} {
 		c.Logf("%v: %s", i, test.message)

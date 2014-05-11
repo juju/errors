@@ -16,7 +16,7 @@ import (
 //    return errors.Errorf("validation failed")
 //
 func Errorf(format string, args ...interface{}) error {
-	err := &errgo.Err{Message_: fmt.Sprintf(format, args...)}
+	err := &Err{errgo.Err{Message_: fmt.Sprintf(format, args...)}}
 	err.SetLocation(1)
 	return err
 }
@@ -30,7 +30,7 @@ func Errorf(format string, args ...interface{}) error {
 //   }
 //
 func Trace(other error) error {
-	err := &errgo.Err{Underlying_: other}
+	err := &Err{errgo.Err{Underlying_: other}}
 	err.SetLocation(1)
 	return err
 }
@@ -47,10 +47,12 @@ func Trace(other error) error {
 func Annotate(other error, message string) error {
 	// Underlying is the previous link used for traversing the stack.
 	// Cause is the reason for this error.
-	err := &errgo.Err{
-		Underlying_: other,
-		Cause_:      other,
-		Message_:    message,
+	err := &Err{
+		errgo.Err{
+			Underlying_: other,
+			Cause_:      other,
+			Message_:    message,
+		},
 	}
 	err.SetLocation(1)
 	return err
@@ -68,10 +70,12 @@ func Annotate(other error, message string) error {
 func Annotatef(other error, format string, args ...interface{}) error {
 	// Underlying is the previous link used for traversing the stack.
 	// Cause is the reason for this error.
-	err := &errgo.Err{
-		Underlying_: other,
-		Cause_:      other,
-		Message_:    fmt.Sprintf(format, args...),
+	err := &Err{
+		errgo.Err{
+			Underlying_: other,
+			Cause_:      other,
+			Message_:    fmt.Sprintf(format, args...),
+		},
 	}
 	err.SetLocation(1)
 	return err
@@ -87,9 +91,11 @@ func Annotatef(other error, format string, args ...interface{}) error {
 //   }
 //
 func Wrap(other, newDescriptive error) error {
-	err := &errgo.Err{
-		Underlying_: other,
-		Cause_:      newDescriptive,
+	err := &Err{
+		errgo.Err{
+			Underlying_: other,
+			Cause_:      newDescriptive,
+		},
 	}
 	err.SetLocation(1)
 	return err

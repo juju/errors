@@ -10,6 +10,24 @@ import (
 	"github.com/juju/loggo"
 )
 
+// A juju Err is an errgo.Err, but formatted with the Cause.
+type Err struct {
+	errgo.Err
+}
+
+// Error implements error.Error.
+func (e *Err) Error() string {
+	switch {
+	case e.Message_ == "" && e.Cause_ == nil:
+		return "<no error>"
+	case e.Message_ == "":
+		return e.Cause_.Error()
+	case e.Cause_ == nil:
+		return e.Message_
+	}
+	return fmt.Sprintf("%s: %v", e.Message_, e.Cause_)
+}
+
 // newer is implemented by error types that can add a context message
 // while preserving their type.
 type newer interface {
@@ -17,10 +35,12 @@ type newer interface {
 }
 
 // wrap is a helper to construct an *wrapper.
-func wrap(err error, format, suffix string, args ...interface{}) errgo.Err {
-	return errgo.Err{
-		Message_:    fmt.Sprintf(format+suffix, args...),
-		Underlying_: err,
+func wrap(err error, format, suffix string, args ...interface{}) Err {
+	return Err{
+		errgo.Err{
+			Message_:    fmt.Sprintf(format+suffix, args...),
+			Underlying_: err,
+		},
 	}
 }
 
@@ -49,9 +69,11 @@ func Maskf(err *error, format string, args ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf(format, args...)
-	newErr := &errgo.Err{
-		Message_:    fmt.Sprintf("%s: %v", msg, *err),
-		Underlying_: *err,
+	newErr := &Err{
+		errgo.Err{
+			Message_:    fmt.Sprintf("%s: %v", msg, *err),
+			Underlying_: *err,
+		},
 	}
 	newErr.SetLocation(1)
 	*err = newErr
@@ -59,7 +81,7 @@ func Maskf(err *error, format string, args ...interface{}) {
 
 // notFound represents an error when something has not been found.
 type notFound struct {
-	errgo.Err
+	Err
 }
 
 func (e *notFound) new(msg string) error {
@@ -91,7 +113,7 @@ func IsNotFound(err error) bool {
 
 // unauthorized represents an error when an operation is unauthorized.
 type unauthorized struct {
-	errgo.Err
+	Err
 }
 
 func (e *unauthorized) new(msg string) error {
@@ -124,7 +146,7 @@ func IsUnauthorized(err error) bool {
 // notImplemented represents an error when something is not
 // implemented.
 type notImplemented struct {
-	errgo.Err
+	Err
 }
 
 func (e *notImplemented) new(msg string) error {
@@ -156,7 +178,7 @@ func IsNotImplemented(err error) bool {
 
 // alreadyExists represents and error when something already exists.
 type alreadyExists struct {
-	errgo.Err
+	Err
 }
 
 func (e *alreadyExists) new(msg string) error {
@@ -188,7 +210,7 @@ func IsAlreadyExists(err error) bool {
 
 // notSupported represents an error when something is not supported.
 type notSupported struct {
-	errgo.Err
+	Err
 }
 
 func (e *notSupported) new(msg string) error {
