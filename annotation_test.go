@@ -5,11 +5,14 @@ package errors_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	gc "launchpad.net/gocheck"
 
+	"github.com/juju/errgo"
 	"github.com/juju/errors"
 )
 
@@ -63,7 +66,6 @@ func (*annotationSuite) TestErrorString(c *gc.C) {
 		}, {
 			message: "wrapped error",
 			generator: func() error {
-				//first := Errorf("first error")
 				err := newError("first error")
 				return errors.Wrap(err, newError("detailed error"))
 			},
@@ -84,6 +86,17 @@ func (*annotationSuite) TestErrorString(c *gc.C) {
 				return errors.Annotatef(err, "annotated")
 			},
 			expected: "annotated: detailed error",
+		}, {
+			message: "traced, and annotated",
+			generator: func() error {
+				err := errors.New("first error")
+				err = errors.Trace(err)
+				err = errors.Annotate(err, "some context")
+				err = errors.Trace(err)
+				err = errors.Annotate(err, "more context")
+				return errors.Trace(err)
+			},
+			expected: "more context: some context: first error",
 		},
 	} {
 		c.Logf("%v: %s", i, test.message)
@@ -107,6 +120,82 @@ func (*annotationSuite) TestAnnotatedErrorCheck(c *gc.C) {
 	c.Assert(os.IsNotExist(err), gc.Equals, false)
 	// However if we use the Check method, it is.
 	c.Assert(errors.Check(err, os.IsNotExist), gc.Equals, true)
+}
+
+func (*annotationSuite) TestErrorStack(c *gc.C) {
+	for i, test := range []struct {
+		message   string
+		generator func() error
+		expected  string
+	}{
+		{
+			message: "raw error",
+			generator: func() error {
+				return fmt.Errorf("raw")
+			},
+			expected: "raw",
+		}, {
+			message: "single error stack",
+			generator: func() error {
+				return errors.New("first error") //err single
+			},
+			expected: "$single$: first error",
+		}, {
+			message: "annotated error",
+			generator: func() error {
+				err := errors.New("first error")          //err annotated-0
+				return errors.Annotate(err, "annotation") //err annotated-1
+			},
+			expected: "" +
+				"$annotated-1$: annotation\n" +
+				"$annotated-0$: first error",
+		}, {
+			message: "wrapped error",
+			generator: func() error {
+				err := errors.New("first error")                    //err wrapped-0
+				return errors.Wrap(err, newError("detailed error")) //err wrapped-1
+			},
+			expected: "" +
+				"$wrapped-1$: \n" +
+				"$wrapped-0$: first error",
+		}, {
+			message: "annotated wrapped error",
+			generator: func() error {
+				err := errors.Errorf("first error")                  //err ann-wrap-0
+				err = errors.Wrap(err, fmt.Errorf("detailed error")) //err ann-wrap-1
+				return errors.Annotatef(err, "annotated")            //err ann-wrap-2
+			},
+			expected: "" +
+				"$ann-wrap-2$: annotated\n" +
+				"$ann-wrap-1$: \n" +
+				"$ann-wrap-0$: first error",
+		}, {
+			message: "traced, and annotated",
+			generator: func() error {
+				err := errors.New("first error")           //err stack-0
+				err = errors.Trace(err)                    //err stack-1
+				err = errors.Annotate(err, "some context") //err stack-2
+				err = errors.Trace(err)                    //err stack-3
+				err = errors.Annotate(err, "more context") //err stack-4
+				return errors.Trace(err)                   //err stack-5
+			},
+			expected: "" +
+				"$stack-5$: \n" +
+				"$stack-4$: more context\n" +
+				"$stack-3$: \n" +
+				"$stack-2$: some context\n" +
+				"$stack-1$: \n" +
+				"$stack-0$: first error",
+		},
+	} {
+		c.Logf("%v: %s", i, test.message)
+		err := test.generator()
+		expected := replaceLocations(test.expected)
+		ok := c.Check(errors.ErrorStack(err), gc.Equals, expected)
+		if !ok {
+			c.Logf("%#v", err)
+		}
+	}
 }
 
 // This is an uncomparable error type, as it is a struct that supports the
@@ -137,4 +226,52 @@ type testError struct {
 
 func (e testError) Error() string {
 	return e.message
+}
+
+// Copied from the errgo/errors_test.go.
+
+func replaceLocations(s string) string {
+	t := ""
+	for {
+		i := strings.Index(s, "$")
+		if i == -1 {
+			break
+		}
+		t += s[0:i]
+		s = s[i+1:]
+		i = strings.Index(s, "$")
+		if i == -1 {
+			panic("no second $")
+		}
+		t += location(s[0:i]).String()
+		s = s[i+1:]
+	}
+	t += s
+	return t
+}
+
+func location(tag string) errgo.Location {
+	line, ok := tagToLine[tag]
+	if !ok {
+		panic(fmt.Errorf("tag %q not found", tag))
+	}
+	return errgo.Location{
+		File: "github.com/juju/errors/annotation_test.go",
+		Line: line,
+	}
+}
+
+var tagToLine = make(map[string]int)
+
+func init() {
+	data, err := ioutil.ReadFile("annotation_test.go")
+	if err != nil {
+		panic(err)
+	}
+	lines := strings.Split(string(data), "\n")
+	for i, line := range lines {
+		if j := strings.Index(line, "//err "); j >= 0 {
+			tagToLine[line[j+len("//err "):]] = i + 1
+		}
+	}
 }

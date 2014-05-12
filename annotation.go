@@ -142,7 +142,8 @@ func ErrorStack(err error) string {
 	for {
 		if err, ok := err.(errgo.Locationer); ok {
 			loc := err.Location()
-			// trimGoPath(&loc)
+			// Strip off the leading GOPATH/src path elements.
+			loc.File = trimGoPath(loc.File)
 			if loc.IsSet() {
 				buff = append(buff, loc.String()...)
 				buff = append(buff, ": "...)
