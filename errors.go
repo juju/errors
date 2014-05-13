@@ -24,12 +24,10 @@ func (e *Err) Error() string {
 		err = e.Cause_
 	}
 	switch {
-	case e.Message_ == "" && err == nil:
-		return "<no message>"
-	case e.Message_ == "":
-		return err.Error()
 	case err == nil:
 		return e.Message_
+	case e.Message_ == "":
+		return err.Error()
 	}
 	return fmt.Sprintf("%s: %v", e.Message_, err)
 }
@@ -90,9 +88,14 @@ func Maskf(err *error, format string, args ...interface{}) {
 	if *err == nil {
 		return
 	}
-	msg := fmt.Sprintf(format, args...)
-	newErr := wrap(*err, "%s: %v", "", msg, *err)
-	*err = &newErr
+	newErr := &Err{
+		errgo.Err{
+			Message_:    fmt.Sprintf(format, args...),
+			Underlying_: *err,
+		},
+	}
+	newErr.SetLocation(1)
+	*err = newErr
 }
 
 // notFound represents an error when something has not been found.
