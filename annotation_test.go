@@ -147,8 +147,8 @@ func (*annotationSuite) TestErrorStack(c *gc.C) {
 				return errors.Annotate(err, "annotation") //err annotated-1
 			},
 			expected: "" +
-				"$annotated-1$: annotation\n" +
-				"$annotated-0$: first error",
+				"$annotated-0$: first error\n" +
+				"$annotated-1$: annotation",
 		}, {
 			message: "wrapped error",
 			generator: func() error {
@@ -156,8 +156,8 @@ func (*annotationSuite) TestErrorStack(c *gc.C) {
 				return errors.Wrap(err, newError("detailed error")) //err wrapped-1
 			},
 			expected: "" +
-				"$wrapped-1$: \n" +
-				"$wrapped-0$: first error",
+				"$wrapped-0$: first error\n" +
+				"$wrapped-1$: detailed error",
 		}, {
 			message: "annotated wrapped error",
 			generator: func() error {
@@ -166,9 +166,9 @@ func (*annotationSuite) TestErrorStack(c *gc.C) {
 				return errors.Annotatef(err, "annotated")            //err ann-wrap-2
 			},
 			expected: "" +
-				"$ann-wrap-2$: annotated\n" +
-				"$ann-wrap-1$: \n" +
-				"$ann-wrap-0$: first error",
+				"$ann-wrap-0$: first error\n" +
+				"$ann-wrap-1$: detailed error\n" +
+				"$ann-wrap-2$: annotated",
 		}, {
 			message: "traced, and annotated",
 			generator: func() error {
@@ -180,12 +180,29 @@ func (*annotationSuite) TestErrorStack(c *gc.C) {
 				return errors.Trace(err)                   //err stack-5
 			},
 			expected: "" +
-				"$stack-5$: \n" +
-				"$stack-4$: more context\n" +
-				"$stack-3$: \n" +
-				"$stack-2$: some context\n" +
+				"$stack-0$: first error\n" +
 				"$stack-1$: \n" +
-				"$stack-0$: first error",
+				"$stack-2$: some context\n" +
+				"$stack-3$: \n" +
+				"$stack-4$: more context\n" +
+				"$stack-5$: ",
+		}, {
+			message: "uncomparable, mixed errgo, value error",
+			generator: func() error {
+				err := newNonComparableError("first error")                        //err mixed-0
+				err = errors.Trace(err)                                            //err mixed-1
+				err = errgo.WithCausef(err, newError("value error"), "annotation") //err mixed-2
+				err = errors.Trace(err)                                            //err mixed-3
+				err = errors.Annotate(err, "more context")                         //err mixed-4
+				return errors.Trace(err)                                           //err mixed-5
+			},
+			expected: "" +
+				"first error\n" +
+				"$mixed-1$: \n" +
+				"$mixed-2$: annotation: value error\n" +
+				"$mixed-3$: \n" +
+				"$mixed-4$: more context\n" +
+				"$mixed-5$: ",
 		},
 	} {
 		c.Logf("%v: %s", i, test.message)

@@ -17,15 +17,21 @@ type Err struct {
 
 // Error implements error.Error.
 func (e *Err) Error() string {
+	// We want to walk up the stack of errors showing the annotations
+	// as long as the cause is the same.
+	err := e.Underlying_
+	if !sameError(Cause(e.Underlying_), e.Cause_) && e.Cause_ != nil {
+		err = e.Cause_
+	}
 	switch {
-	case e.Message_ == "" && e.Cause_ == nil:
-		return "<no error>"
+	case e.Message_ == "" && err == nil:
+		return "<no message>"
 	case e.Message_ == "":
-		return e.Cause_.Error()
-	case e.Cause_ == nil:
+		return err.Error()
+	case err == nil:
 		return e.Message_
 	}
-	return fmt.Sprintf("%s: %v", e.Message_, e.Cause_)
+	return fmt.Sprintf("%s: %v", e.Message_, err)
 }
 
 // Cause returns the cause of the given error.  If err does not implement
@@ -66,7 +72,15 @@ func Contextf(err *error, format string, args ...interface{}) {
 		*err = errNewer.new(msg)
 		return
 	}
-	*err = fmt.Errorf("%s: %v", msg, *err)
+	newErr := &Err{
+		errgo.Err{
+			Message_:    msg,
+			Underlying_: *err,
+			Cause_:      Cause(*err),
+		},
+	}
+	newErr.SetLocation(1)
+	*err = newErr
 }
 
 // Maskf masks the given error (when it is not nil) with the given

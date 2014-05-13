@@ -5,6 +5,7 @@ package errors
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/juju/errgo"
 )
@@ -42,7 +43,7 @@ func Errorf(format string, args ...interface{}) error {
 //   }
 //
 func Trace(other error) error {
-	err := &Err{errgo.Err{Underlying_: other, Cause_: other}}
+	err := &Err{errgo.Err{Underlying_: other, Cause_: Cause(other)}}
 	err.SetLocation(1)
 	return err
 }
@@ -62,7 +63,7 @@ func Annotate(other error, message string) error {
 	err := &Err{
 		errgo.Err{
 			Underlying_: other,
-			Cause_:      other,
+			Cause_:      Cause(other),
 			Message_:    message,
 		},
 	}
@@ -85,7 +86,7 @@ func Annotatef(other error, format string, args ...interface{}) error {
 	err := &Err{
 		errgo.Err{
 			Underlying_: other,
-			Cause_:      other,
+			Cause_:      Cause(other),
 			Message_:    fmt.Sprintf(format, args...),
 		},
 	}
@@ -138,8 +139,10 @@ func ErrorStack(err error) string {
 	if err == nil {
 		return ""
 	}
-	var buff []byte
+	// We want the first error first
+	var lines []string
 	for {
+		var buff []byte
 		if err, ok := err.(errgo.Locationer); ok {
 			loc := err.Location()
 			// Strip off the leading GOPATH/src path elements.
@@ -150,16 +153,35 @@ func ErrorStack(err error) string {
 			}
 		}
 		if cerr, ok := err.(errgo.Wrapper); ok {
-			buff = append(buff, cerr.Message()...)
+			message := cerr.Message()
+			buff = append(buff, message...)
+			// If there is a cause for this error, and it is different to the cause
+			// of the underlying error, then output the error string in the stack trace.
+			var cause error
+			if err1, ok := err.(errgo.Causer); ok {
+				cause = err1.Cause()
+			}
 			err = cerr.Underlying()
+			if cause != nil && !sameError(Cause(err), cause) {
+				if message != "" {
+					buff = append(buff, ": "...)
+				}
+				buff = append(buff, cause.Error()...)
+			}
 		} else {
 			buff = append(buff, err.Error()...)
 			err = nil
 		}
+		lines = append(lines, string(buff))
 		if err == nil {
 			break
 		}
-		buff = append(buff, '\n')
 	}
-	return string(buff)
+	// reverse the lines to get the original error, which was at the end of
+	// the list, back to the start.
+	var result []string
+	for i := len(lines); i > 0; i-- {
+		result = append(result, lines[i-1])
+	}
+	return strings.Join(result, "\n")
 }

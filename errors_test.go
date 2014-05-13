@@ -170,6 +170,12 @@ func (*errorsSuite) TestContextf(c *gc.C) {
 	runErrorTests(c, errorTests, true)
 }
 
+func (*errorsSuite) TestContextfNotNewer(c *gc.C) {
+	err := fmt.Errorf("simple error")
+	errors.Contextf(&err, "annotate")
+	c.Assert(err, gc.ErrorMatches, "annotate: simple error")
+}
+
 func (*errorsSuite) TestAllErrors(c *gc.C) {
 	errorTests := []errorTest{}
 	for _, errInfo := range allErrors {
