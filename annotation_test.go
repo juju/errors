@@ -208,7 +208,7 @@ func (*annotationSuite) TestErrorStack(c *gc.C) {
 		c.Logf("%v: %s", i, test.message)
 		err := test.generator()
 		expected := replaceLocations(test.expected)
-		ok := c.Check(errors.ErrorStack(err), gc.Equals, expected)
+		ok := c.Check(errors.ErrorStack(err), gc.Matches, expected)
 		if !ok {
 			c.Logf("%#v", err)
 		}
@@ -273,7 +273,7 @@ func location(tag string) errgo.Location {
 		panic(fmt.Errorf("tag %q not found", tag))
 	}
 	return errgo.Location{
-		File: "github.com/juju/errors/annotation_test.go",
+		File: ".*github.com/juju/errors/annotation_test.go",
 		Line: line,
 	}
 }
