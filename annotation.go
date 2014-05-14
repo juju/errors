@@ -10,6 +10,12 @@ import (
 	"github.com/juju/errgo"
 )
 
+// NOTE: the SetLocation calls explicitly call into the embedded errgo Err
+// structure as gccgo creates an extra entry in the runtime stack for the
+// generated method on the outer Err structure that just defers to the
+// errgo.Err method.  In order to get the package passing with gccgo this is
+// needed.
+
 // New is a drop in replacement for the standard libary errors module that records
 // the location that the error is created.
 //
@@ -18,7 +24,7 @@ import (
 //
 func New(message string) error {
 	err := &Err{errgo.Err{Message_: message}}
-	err.SetLocation(1)
+	err.Err.SetLocation(1)
 	return err
 }
 
@@ -30,7 +36,7 @@ func New(message string) error {
 //
 func Errorf(format string, args ...interface{}) error {
 	err := &Err{errgo.Err{Message_: fmt.Sprintf(format, args...)}}
-	err.SetLocation(1)
+	err.Err.SetLocation(1)
 	return err
 }
 
@@ -44,7 +50,7 @@ func Errorf(format string, args ...interface{}) error {
 //
 func Trace(other error) error {
 	err := &Err{errgo.Err{Underlying_: other, Cause_: Cause(other)}}
-	err.SetLocation(1)
+	err.Err.SetLocation(1)
 	return err
 }
 
@@ -67,7 +73,7 @@ func Annotate(other error, message string) error {
 			Message_:    message,
 		},
 	}
-	err.SetLocation(1)
+	err.Err.SetLocation(1)
 	return err
 }
 
@@ -90,7 +96,7 @@ func Annotatef(other error, format string, args ...interface{}) error {
 			Message_:    fmt.Sprintf(format, args...),
 		},
 	}
-	err.SetLocation(1)
+	err.Err.SetLocation(1)
 	return err
 }
 
@@ -110,7 +116,7 @@ func Wrap(other, newDescriptive error) error {
 			Cause_:      newDescriptive,
 		},
 	}
-	err.SetLocation(1)
+	err.Err.SetLocation(1)
 	return err
 }
 

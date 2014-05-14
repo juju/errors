@@ -10,6 +10,12 @@ import (
 	"github.com/juju/loggo"
 )
 
+// NOTE: the SetLocation calls explicitly call into the embedded errgo Err
+// structure as gccgo creates an extra entry in the runtime stack for the
+// generated method on the outer Err structure that just defers to the
+// errgo.Err method.  In order to get the package passing with gccgo this is
+// needed.
+
 // A juju Err is an errgo.Err, but formatted with the Cause.
 type Err struct {
 	errgo.Err
@@ -52,7 +58,7 @@ func wrap(err error, format, suffix string, args ...interface{}) Err {
 			Underlying_: err,
 		},
 	}
-	newErr.SetLocation(2)
+	newErr.Err.SetLocation(2)
 	return newErr
 }
 
@@ -77,7 +83,7 @@ func Contextf(err *error, format string, args ...interface{}) {
 			Cause_:      Cause(*err),
 		},
 	}
-	newErr.SetLocation(1)
+	newErr.Err.SetLocation(1)
 	*err = newErr
 }
 
@@ -94,7 +100,7 @@ func Maskf(err *error, format string, args ...interface{}) {
 			Underlying_: *err,
 		},
 	}
-	newErr.SetLocation(1)
+	newErr.Err.SetLocation(1)
 	*err = newErr
 }
 
