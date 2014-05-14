@@ -26,14 +26,14 @@ This instead becomes:
 		    return errors.Trace(err)
 		}
 
-which just records the file, line and function, or
+which just records the file and line number of the Trace call, or
 
 
 	    if err := SomeFunc(); err != nil {
 		    return errors.Annotate(err, "more context")
 		}
 
-which adds annotation to the error.
+which also adds an annotation to the error.
 
 Often when you want to check to see if an error is of a particular type, a
 helper function is exported by the package that returned the error, like the
