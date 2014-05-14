@@ -32,7 +32,7 @@ func New(message string) error {
 // error is created.  This should be a drop in replacement for fmt.Errorf.
 //
 // For example:
-//    return errors.Errorf("validation failed")
+//    return errors.Errorf("validation failed: %s", message)
 //
 func Errorf(format string, args ...interface{}) error {
 	err := &Err{errgo.Err{Message_: fmt.Sprintf(format, args...)}}

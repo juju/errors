@@ -16,7 +16,9 @@ import (
 // errgo.Err method.  In order to get the package passing with gccgo this is
 // needed.
 
-// A juju Err is an errgo.Err, but formatted with the Cause.
+// A juju Err is an errgo.Err but the error string generated walks up the
+// stack of errors adding the messages but stops if the cause of the
+// underlying error is different.
 type Err struct {
 	errgo.Err
 }

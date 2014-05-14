@@ -1,5 +1,5 @@
 /*
-package errors provides an easy way to annotate errors without losing the
+The juju/errors provides an easy way to annotate errors without losing the
 orginal error context.
 
 The package is based on github.com/juju/errgo and embeds the errgo.Err type.
