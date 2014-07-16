@@ -5,6 +5,7 @@ package errors
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/juju/errgo"
@@ -190,4 +191,9 @@ func ErrorStack(err error) string {
 		result = append(result, lines[i-1])
 	}
 	return strings.Join(result, "\n")
+}
+
+// Ideally we'd have a way to check identity, but deep equals will do.
+func sameError(e1, e2 error) bool {
+	return reflect.DeepEqual(e1, e2)
 }
