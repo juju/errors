@@ -1,3 +1,6 @@
+// Copyright 2013, 2014 Canonical Ltd.
+// Licensed under the LGPLv3, see LICENCE file for details.
+
 package errors
 
 // Since variables are declared before the init block, in order to get the goPath
