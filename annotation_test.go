@@ -24,6 +24,13 @@ func echo(value interface{}) interface{} {
 	return value
 }
 
+func (*annotationSuite) TestNilArgs(c *gc.C) {
+	c.Assert(errors.Trace(nil), gc.IsNil)
+	c.Assert(errors.Annotate(nil, "foo"), gc.IsNil)
+	c.Assert(errors.Annotatef(nil, "foo %d", 2), gc.IsNil)
+	c.Assert(errors.Wrap(nil, errors.New("omg")), gc.IsNil)
+}
+
 func (*annotationSuite) TestErrorString(c *gc.C) {
 	for i, test := range []struct {
 		message   string
@@ -43,12 +50,6 @@ func (*annotationSuite) TestErrorString(c *gc.C) {
 				return errors.Errorf("first error")
 			},
 			expected: "first error",
-		}, {
-			message: "annotating nil",
-			generator: func() error {
-				return errors.Annotatef(nil, "annotation")
-			},
-			expected: "annotation",
 		}, {
 			message: "annotated error",
 			generator: func() error {
