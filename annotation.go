@@ -43,6 +43,7 @@ func Errorf(format string, args ...interface{}) error {
 
 // Trace always returns an annotated error.  Trace records the
 // location of the Trace call, and adds it to the annotation stack.
+// If the error argument is nil, the result of Trace is nil.
 //
 // For example:
 //   if err := SomeFunc(); err != nil {
@@ -50,6 +51,9 @@ func Errorf(format string, args ...interface{}) error {
 //   }
 //
 func Trace(other error) error {
+	if other == nil {
+		return nil
+	}
 	err := &Err{errgo.Err{Underlying_: other, Cause_: Cause(other)}}
 	err.Err.SetLocation(1)
 	return err
@@ -58,6 +62,7 @@ func Trace(other error) error {
 // Annotate is used to add extra context to an existing error. The location of
 // the Annotate call is recorded with the annotations. The file, line and
 // function are also recorded.
+// If the error argument is nil, the result of Annotate is nil.
 //
 // For example:
 //   if err := SomeFunc(); err != nil {
@@ -65,6 +70,9 @@ func Trace(other error) error {
 //   }
 //
 func Annotate(other error, message string) error {
+	if other == nil {
+		return nil
+	}
 	// Underlying is the previous link used for traversing the stack.
 	// Cause is the reason for this error.
 	err := &Err{
@@ -81,6 +89,7 @@ func Annotate(other error, message string) error {
 // Annotatef is used to add extra context to an existing error. The location of
 // the Annotate call is recorded with the annotations. The file, line and
 // function are also recorded.
+// If the error argument is nil, the result of Annotatef is nil.
 //
 // For example:
 //   if err := SomeFunc(); err != nil {
@@ -88,6 +97,9 @@ func Annotate(other error, message string) error {
 //   }
 //
 func Annotatef(other error, format string, args ...interface{}) error {
+	if other == nil {
+		return nil
+	}
 	// Underlying is the previous link used for traversing the stack.
 	// Cause is the reason for this error.
 	err := &Err{
@@ -103,6 +115,7 @@ func Annotatef(other error, format string, args ...interface{}) error {
 
 // Wrap changes the error value that is returned with LastError. The location
 // of the Wrap call is also stored in the annotation stack.
+// If the error argument is nil, the result of Wrap is nil.
 //
 // For example:
 //   if err := SomeFunc(); err != nil {
@@ -111,6 +124,9 @@ func Annotatef(other error, format string, args ...interface{}) error {
 //   }
 //
 func Wrap(other, newDescriptive error) error {
+	if other == nil {
+		return nil
+	}
 	err := &Err{
 		errgo.Err{
 			Underlying_: other,
