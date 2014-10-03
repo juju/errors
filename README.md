@@ -231,6 +231,14 @@ IsNotSupported reports whether the error was created with
 NotSupportedf() or NewNotSupported().
 
 
+## func IsNotValid
+``` go
+func IsNotVa;od(err error) bool
+```
+IsNotValid reports whether the error was created with NotValidf() or
+NewNotValid().
+
+
 ## func IsUnauthorized
 ``` go
 func IsUnauthorized(err error) bool
@@ -300,6 +308,13 @@ NewNotSupported returns an error which wraps err and satisfies
 IsNotSupported().
 
 
+## func NewNotValid
+``` go
+func NewNotValid(err error, msg string) error
+```
+NewNotValid returns an error which wraps err and satisfies IsNotValid().
+
+
 ## func NewUnauthorized
 ``` go
 func NewUnauthorized(err error, msg string) error
@@ -327,6 +342,13 @@ NotImplementedf returns an error which satisfies IsNotImplemented().
 func NotSupportedf(format string, args ...interface{}) error
 ```
 NotSupportedf returns an error which satisfies IsNotSupported().
+
+
+## func NotValidf
+``` go
+func NotValidf(format string, args ...interface{}) error
+```
+NotValidf returns an error which satisfies IsNotValid().
 
 
 ## func Trace
