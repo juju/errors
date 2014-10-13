@@ -12,8 +12,8 @@ import (
 
 	gc "gopkg.in/check.v1"
 
+	"github.com/juju/errgo"
 	"github.com/juju/errors"
-	"gopkg.in/errgo.v1"
 )
 
 type annotationSuite struct{}
@@ -261,19 +261,22 @@ func replaceLocations(s string) string {
 		if i == -1 {
 			panic("no second $")
 		}
-		t += location(s[0:i])
+		t += location(s[0:i]).String()
 		s = s[i+1:]
 	}
 	t += s
 	return t
 }
 
-func location(tag string) string {
+func location(tag string) errgo.Location {
 	line, ok := tagToLine[tag]
 	if !ok {
 		panic(fmt.Errorf("tag %q not found", tag))
 	}
-	return fmt.Sprintf("github.com/juju/errors/annotation_test.go:%d", line)
+	return errgo.Location{
+		File: "github.com/juju/errors/annotation_test.go",
+		Line: line,
+	}
 }
 
 var tagToLine = make(map[string]int)
