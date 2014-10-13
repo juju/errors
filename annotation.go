@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/juju/errgo"
+	"gopkg.in/errgo.v1"
 )
 
 // NOTE: the SetLocation calls explicitly call into the embedded errgo Err
@@ -167,12 +167,11 @@ func ErrorStack(err error) string {
 	for {
 		var buff []byte
 		if err, ok := err.(errgo.Locationer); ok {
-			loc := err.Location()
+			file, line := err.Location()
 			// Strip off the leading GOPATH/src path elements.
-			loc.File = trimGoPath(loc.File)
-			if loc.IsSet() {
-				buff = append(buff, loc.String()...)
-				buff = append(buff, ": "...)
+			if file != "" {
+				file = trimGoPath(file)
+				buff = append(buff, fmt.Sprintf("%s:%d: ", file, line)...)
 			}
 		}
 		if cerr, ok := err.(errgo.Wrapper); ok {
