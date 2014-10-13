@@ -6,8 +6,8 @@ package errors
 import (
 	"fmt"
 
+	"github.com/juju/errgo"
 	"github.com/juju/loggo"
-	"gopkg.in/errgo.v1"
 )
 
 // NOTE: the SetLocation calls explicitly call into the embedded errgo Err
