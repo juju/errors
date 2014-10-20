@@ -233,7 +233,7 @@ NotSupportedf() or NewNotSupported().
 
 ## func IsNotValid
 ``` go
-func IsNotVa;od(err error) bool
+func IsNotValid(err error) bool
 ```
 IsNotValid reports whether the error was created with NotValidf() or
 NewNotValid().
