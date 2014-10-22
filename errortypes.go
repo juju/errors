@@ -140,6 +140,33 @@ func IsNotSupported(err error) bool {
 	return ok
 }
 
+// notValid represents an error when something is not valid.
+type notValid struct {
+	Err
+}
+
+func (e *notValid) new(msg string) error {
+	return NewNotValid(e, msg)
+}
+
+// NotValidf returns an error which satisfies IsNotValid().
+func NotValidf(format string, args ...interface{}) error {
+	return &notValid{wrap(nil, format, " not valid", args...)}
+}
+
+// NewNotValid returns an error which wraps err and satisfies IsNotValid().
+func NewNotValid(err error, msg string) error {
+	return &notValid{wrap(err, msg, "")}
+}
+
+// IsNotValid reports whether the error was created with NotValidf() or
+// NewNotValid().
+func IsNotValid(err error) bool {
+	err = errgo.Cause(err)
+	_, ok := err.(*notValid)
+	return ok
+}
+
 // LoggedErrorf logs the error and return an error with the same text.
 func LoggedErrorf(logger loggo.Logger, format string, a ...interface{}) error {
 	logger.Logf(loggo.ERROR, format, a...)
