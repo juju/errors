@@ -22,16 +22,16 @@ type Err struct {
 	// by the Cause method.
 	cause error
 
-	// Previous holds the Previous error in the error stack, if any.
+	// previous holds the previous error in the error stack, if any.
 	previous error
 
-	// file and line holds the source code location where the error was
+	// file and line hold the source code location where the error was
 	// created.
 	file string
 	line int
 }
 
-// NewErr is used to return a Err for the purpose of embedding in other
+// NewErr is used to return an Err for the purpose of embedding in other
 // structures.  The location is not specified, and needs to be set with a call
 // to SetLocation.
 //
@@ -101,7 +101,7 @@ func (e *Err) Error() string {
 	return fmt.Sprintf("%s: %v", e.message, err)
 }
 
-// SetLocation records the source location of the error by at callDepth stack
+// SetLocation records the source location of the error at callDepth stack
 // frames above the call.
 func (e *Err) SetLocation(callDepth int) {
 	_, file, line, _ := runtime.Caller(callDepth + 1)

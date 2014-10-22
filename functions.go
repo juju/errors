@@ -221,8 +221,8 @@ var (
 	_ causer     = (*Err)(nil)
 )
 
-// Details returns information about the stack of
-// Previous errors wrapped by err, in the format:
+// Details returns information about the stack of errors wrapped by err, in
+// the format:
 //
 // 	[{filename:99: error one} {otherfile:55: cause of error one}]
 //

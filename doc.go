@@ -5,9 +5,10 @@
 The juju/errors provides an easy way to annotate errors without losing the
 orginal error context.
 
-The exported New and Errorf functions are designed to replace the errors.New
-and fmt.Errorf functions respectively. The same underlying error is there, but
-the package also records the location at which the error was created.
+The exported `New` and `Errorf` functions are designed to replace the
+`errors.New` and `fmt.Errorf` functions respectively. The same underlying
+error is there, but the package also records the location at which the error
+was created.
 
 A primary use case for this library is to add extra context any time an
 error is returned from a function.
@@ -31,15 +32,15 @@ which just records the file and line number of the Trace call, or
 which also adds an annotation to the error.
 
 When you want to check to see if an error is of a particular type, a helper
-function is exported by the package that returned the error, like the `os`
-package.  The underlying cause of the error is available using the Cause
-function.
+function is normally exported by the package that returned the error, like the
+`os` package does.  The underlying cause of the error is available using the
+`Cause` function.
 
 	os.IsNotExist(errors.Cause(err))
 
-The result of the Error() call on the annotated error is the annotations
-joined with colons, then the result of the Error() method for the underlying
-error that was the cause.
+The result of the `Error()` call on an annotated error is the annotations joined
+with colons, then the result of the `Error()` method for the underlying error
+that was the cause.
 
 	err := errors.Errorf("original")
 	err = errors.Annotatef("context")
