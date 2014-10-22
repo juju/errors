@@ -36,16 +36,16 @@ type Err struct {
 // to SetLocation.
 //
 // For example:
-// 		type FooError struct {
-//			errors.Err
-//			code int
-//		}
+//     type FooError struct {
+//         errors.Err
+//         code int
+//     }
 //
-//      func NewFooError(code int) error {
-//			err := &FooError{errors.NewErr("foo"), code}
-//			err.SetLocation(1)
-//			return err
-// 		}
+//     func NewFooError(code int) error {
+//         err := &FooError{errors.NewErr("foo"), code}
+//         err.SetLocation(1)
+//         return err
+//     }
 func NewErr(format string, args ...interface{}) Err {
 	return Err{
 		message: fmt.Sprintf(format, args...),

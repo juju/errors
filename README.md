@@ -256,9 +256,9 @@ LoggedErrorf logs the error and return an error with the same text.
 
 ## func Mask
 ``` go
-func Mask(other error, message string) error
+func Mask(other error) error
 ```
-Mask is a simpler version of Maskf that takes no formatting arguments.
+Mask hides the underlying error type, and records the location of the masking.
 
 
 ## func Maskf
@@ -273,7 +273,7 @@ annotations. If you want to hide the annotations, call Wrap.
 
 ## func New
 ``` go
-func New(s string) error
+func New(message string) error
 ```
 New is a drop in replacement for the standard libary errors module that records
 the location that the error is created.
@@ -386,8 +386,8 @@ Unauthorizedf returns an error which satisfies IsUnauthorized().
 ``` go
 func Wrap(other, newDescriptive error) error
 ```
-Wrap changes the error value that is returned with LastError. The location
-of the Wrap call is also stored in the annotation stack.
+Wrap changes the Cause of the error. The location of the Wrap call is also
+stored in the error stack.
 
 For example:
 
@@ -395,6 +395,21 @@ For example:
 	if err := SomeFunc(); err != nil {
 	    newErr := &packageError{"more context", private_value}
 	    return errors.Wrap(err, newErr)
+	}
+
+
+## func Wrapf
+``` go
+func Wrapf(other, newDescriptive error, format string, args ...interface{}) error
+```
+Wrapf changes the Cause of the error, and adds an annotation. The location
+of the Wrap call is also stored in the error stack.
+
+For example:
+
+
+	if err := SomeFunc(); err != nil {
+	    return errors.Wrapf(err, simpleErrorType, "invalid value %q", value)
 	}
 
 
@@ -417,6 +432,29 @@ this errors package can understand.
 
 
 
+
+
+### func NewErr
+``` go
+func NewErr(format string, args ...interface{}) Err
+```
+NewErr is used to return a Err for the purpose of embedding in other
+structures.  The location is not specified, and needs to be set with a call
+to SetLocation.
+
+For example:
+
+
+	type FooError struct {
+	    errors.Err
+	    code int
+	}
+	
+	func NewFooError(code int) error {
+	    err := &FooError{errors.NewErr("foo"), code}
+	    err.SetLocation(1)
+	    return err
+	}
 
 
 
@@ -444,7 +482,7 @@ Error implements error.Error.
 
 ### func (\*Err) Location
 ``` go
-func (e *Err) Location() Location
+func (e *Err) Location() (filename string, line int)
 ```
 Location is the file and line of where the error was most recently
 created or annotated.
@@ -461,14 +499,6 @@ with Annotate or Mask.
 
 
 
-### func (\*Err) Previous
-``` go
-func (e *Err) Previous() error
-```
-Previous returns the previous error in the error stack, if any.
-
-
-
 ### func (\*Err) SetLocation
 ``` go
 func (e *Err) SetLocation(callDepth int)
@@ -478,30 +508,15 @@ frames above the call.
 
 
 
-## type Location
+### func (\*Err) Underlying
 ``` go
-type Location struct {
-    File string
-    Line int
-}
+func (e *Err) Underlying() error
 ```
-Location describes a source code location.
-
-
-
-
-
-
-
-
-
-
-
-### func (Location) String
-``` go
-func (loc Location) String() string
-```
-String returns a location in filename.go:99 format.
+Underlying returns the previous error in the error stack, if any. A client
+should not ever really call this method.  It is used to build the error
+stack and should not be introspected by client calls.  Or more
+specifically, clients should not depend on anything but the `Cause` of an
+error.
 
 
 
