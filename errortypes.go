@@ -145,10 +145,6 @@ type notValid struct {
 	Err
 }
 
-func (e *notValid) new(msg string) error {
-	return NewNotValid(e, msg)
-}
-
 // NotValidf returns an error which satisfies IsNotValid().
 func NotValidf(format string, args ...interface{}) error {
 	return &notValid{wrap(nil, format, " not valid", args...)}
@@ -162,7 +158,7 @@ func NewNotValid(err error, msg string) error {
 // IsNotValid reports whether the error was created with NotValidf() or
 // NewNotValid().
 func IsNotValid(err error) bool {
-	err = errgo.Cause(err)
+	err = Cause(err)
 	_, ok := err.(*notValid)
 	return ok
 }
