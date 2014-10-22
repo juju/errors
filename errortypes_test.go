@@ -35,9 +35,9 @@ var allErrors = []*errorInfo{
 	&errorInfo{errors.IsNotValid, errors.NotValidf, errors.NewNotValid, " not valid"},
 }
 
-type errorsSuite struct{}
+type errorTypeSuite struct{}
 
-var _ = gc.Suite(&errorsSuite{})
+var _ = gc.Suite(&errorTypeSuite{})
 
 func (t *errorInfo) satisfierName() string {
 	value := reflect.ValueOf(t.satisfier)
@@ -58,13 +58,8 @@ type errorTest struct {
 	errInfo *errorInfo
 }
 
-func contextf(err error, format string, args ...interface{}) error {
-	errors.Contextf(&err, format, args...)
-	return err
-}
-
-func maskf(err error, format string, args ...interface{}) error {
-	errors.Maskf(&err, format, args...)
+func deferredAnnotatef(err error, format string, args ...interface{}) error {
+	errors.DeferredAnnotatef(&err, format, args...)
 	return err
 }
 
@@ -109,60 +104,29 @@ func runErrorTests(c *gc.C, errorTests []errorTest, checkMustSatisfy bool) {
 	}
 }
 
-func (*errorsSuite) TestMaskf(c *gc.C) {
-	// Ensure Maskf masks all known errors and their satisfiers don't
-	// succeed.
+func (*errorTypeSuite) TestDeferredAnnotatef(c *gc.C) {
+	// Ensure DeferredAnnotatef annotates the errors.
 	errorTests := []errorTest{}
 	for _, errInfo := range allErrors {
 		errorTests = append(errorTests, []errorTest{{
-			maskf(nil, "masked"),
+			deferredAnnotatef(nil, "comment"),
 			"<nil>",
 			nil,
 		}, {
-			maskf(stderrors.New("blast"), "masked"),
-			"masked: blast",
+			deferredAnnotatef(stderrors.New("blast"), "comment"),
+			"comment: blast",
 			nil,
 		}, {
-			maskf(errInfo.argsConstructor("foo %d", 42), "masked %d", 69),
-			"masked 69: foo 42" + errInfo.suffix,
+			deferredAnnotatef(errInfo.argsConstructor("foo %d", 42), "comment %d", 69),
+			"comment 69: foo 42" + errInfo.suffix,
 			errInfo,
 		}, {
-			maskf(errInfo.argsConstructor(""), "masked"),
-			"masked: " + errInfo.suffix,
+			deferredAnnotatef(errInfo.argsConstructor(""), "comment"),
+			"comment: " + errInfo.suffix,
 			errInfo,
 		}, {
-			maskf(errInfo.wrapConstructor(stderrors.New("pow!"), "woo"), "masked"),
-			"masked: woo: pow!",
-			errInfo,
-		}}...)
-	}
-
-	runErrorTests(c, errorTests, false)
-}
-
-func (*errorsSuite) TestContextf(c *gc.C) {
-	// Ensure Contextf masks only unknown error types, but passes through known ones.
-	errorTests := []errorTest{}
-	for _, errInfo := range allErrors {
-		errorTests = append(errorTests, []errorTest{{
-			contextf(nil, "prefix"),
-			"<nil>",
-			nil,
-		}, {
-			contextf(stderrors.New("blast"), "prefix"),
-			"prefix: blast",
-			nil,
-		}, {
-			contextf(errInfo.argsConstructor("foo %d", 42), "prefix %d", 69),
-			"prefix 69: foo 42" + errInfo.suffix,
-			errInfo,
-		}, {
-			contextf(errInfo.argsConstructor(""), "prefix"),
-			"prefix: " + errInfo.suffix,
-			errInfo,
-		}, {
-			contextf(errInfo.wrapConstructor(stderrors.New("pow!"), "woo"), "prefix"),
-			"prefix: woo: pow!",
+			deferredAnnotatef(errInfo.wrapConstructor(stderrors.New("pow!"), "woo"), "comment"),
+			"comment: woo: pow!",
 			errInfo,
 		}}...)
 	}
@@ -170,13 +134,7 @@ func (*errorsSuite) TestContextf(c *gc.C) {
 	runErrorTests(c, errorTests, true)
 }
 
-func (*errorsSuite) TestContextfNotNewer(c *gc.C) {
-	err := fmt.Errorf("simple error")
-	errors.Contextf(&err, "annotate")
-	c.Assert(err, gc.ErrorMatches, "annotate: simple error")
-}
-
-func (*errorsSuite) TestAllErrors(c *gc.C) {
+func (*errorTypeSuite) TestAllErrors(c *gc.C) {
 	errorTests := []errorTest{}
 	for _, errInfo := range allErrors {
 		errorTests = append(errorTests, []errorTest{{
