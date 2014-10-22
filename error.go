@@ -9,22 +9,6 @@ import (
 	"runtime"
 )
 
-// Location describes a source code location.
-type Location struct {
-	File string
-	Line int
-}
-
-// String returns a location in filename.go:99 format.
-func (loc Location) String() string {
-	return fmt.Sprintf("%s:%d", loc.File, loc.Line)
-}
-
-// isSet reports whether the location has been set.
-func (loc Location) isSet() bool {
-	return loc.File != ""
-}
-
 // Err holds a description of an error along with information about
 // where the error was created.
 //
@@ -41,9 +25,10 @@ type Err struct {
 	// Previous holds the Previous error in the error stack, if any.
 	previous error
 
-	// Location holds the source code location where the error was
+	// file and line holds the source code location where the error was
 	// created.
-	location Location
+	file string
+	line int
 }
 
 // NewErr is used to return a Err for the purpose of embedding in other
@@ -69,12 +54,16 @@ func NewErr(format string, args ...interface{}) Err {
 
 // Location is the file and line of where the error was most recently
 // created or annotated.
-func (e *Err) Location() Location {
-	return e.location
+func (e *Err) Location() (filename string, line int) {
+	return e.file, e.line
 }
 
-// Previous returns the previous error in the error stack, if any.
-func (e *Err) Previous() error {
+// Underlying returns the previous error in the error stack, if any. A client
+// should not ever really call this method.  It is used to build the error
+// stack and should not be introspected by client calls.  Or more
+// specifically, clients should not depend on anything but the `Cause` of an
+// error.
+func (e *Err) Underlying() error {
 	return e.previous
 }
 
@@ -116,7 +105,8 @@ func (e *Err) Error() string {
 // frames above the call.
 func (e *Err) SetLocation(callDepth int) {
 	_, file, line, _ := runtime.Caller(callDepth + 1)
-	e.location = Location{trimGoPath(file), line}
+	e.file = trimGoPath(file)
+	e.line = line
 }
 
 // Ideally we'd have a way to check identity, but deep equals will do.

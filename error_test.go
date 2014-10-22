@@ -19,11 +19,6 @@ var _ = gc.Suite(&errorsSuite{})
 
 var someErr = errors.New("some error") //err varSomeErr
 
-func (*errorsSuite) TestLocation(c *gc.C) {
-	loc := errors.Location{File: "foo", Line: 35}
-	c.Assert(loc.String(), gc.Equals, "foo:35")
-}
-
 func (*errorsSuite) TestErrorString(c *gc.C) {
 	for i, test := range []struct {
 		message   string

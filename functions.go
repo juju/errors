@@ -206,13 +206,13 @@ type wrapper interface {
 	// error.
 	Message() string
 
-	// Previous returns the Previous error, or nil
+	// Underlying returns the Previous error, or nil
 	// if there is none.
-	Previous() error
+	Underlying() error
 }
 
 type locationer interface {
-	Location() Location
+	Location() (string, int)
 }
 
 var (
@@ -236,15 +236,15 @@ func Details(err error) string {
 	for {
 		s = append(s, '{')
 		if err, ok := err.(locationer); ok {
-			loc := err.Location()
-			if loc.isSet() {
-				s = append(s, loc.String()...)
+			file, line := err.Location()
+			if file != "" {
+				s = append(s, fmt.Sprintf("%s:%d", file, line)...)
 				s = append(s, ": "...)
 			}
 		}
 		if cerr, ok := err.(wrapper); ok {
 			s = append(s, cerr.Message()...)
-			err = cerr.Previous()
+			err = cerr.Underlying()
 		} else {
 			s = append(s, err.Error()...)
 			err = nil
@@ -282,11 +282,11 @@ func ErrorStack(err error) string {
 	for {
 		var buff []byte
 		if err, ok := err.(locationer); ok {
-			loc := err.Location()
+			file, line := err.Location()
 			// Strip off the leading GOPATH/src path elements.
-			loc.File = trimGoPath(loc.File)
-			if loc.isSet() {
-				buff = append(buff, loc.String()...)
+			file = trimGoPath(file)
+			if file != "" {
+				buff = append(buff, fmt.Sprintf("%s:%d", file, line)...)
 				buff = append(buff, ": "...)
 			}
 		}
@@ -299,7 +299,7 @@ func ErrorStack(err error) string {
 			if err1, ok := err.(causer); ok {
 				cause = err1.Cause()
 			}
-			err = cerr.Previous()
+			err = cerr.Underlying()
 			if cause != nil && !sameError(Cause(err), cause) {
 				if message != "" {
 					buff = append(buff, ": "...)

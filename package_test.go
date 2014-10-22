@@ -52,7 +52,7 @@ func replaceLocations(line string) string {
 	return result
 }
 
-func location(tag string) errors.Location {
+func location(tag string) Location {
 	loc, ok := tagToLocation[tag]
 	if !ok {
 		panic(fmt.Errorf("tag %q not found", tag))
@@ -60,7 +60,16 @@ func location(tag string) errors.Location {
 	return loc
 }
 
-var tagToLocation = make(map[string]errors.Location)
+type Location struct {
+	file string
+	line int
+}
+
+func (loc Location) String() string {
+	return fmt.Sprintf("%s:%d", loc.file, loc.line)
+}
+
+var tagToLocation = make(map[string]Location)
 
 func setLocationsForErrorTags(filename string) {
 	data, err := ioutil.ReadFile(filename)
@@ -75,7 +84,7 @@ func setLocationsForErrorTags(filename string) {
 			if _, found := tagToLocation[tag]; found {
 				panic(fmt.Errorf("tag %q already processed previously"))
 			}
-			tagToLocation[tag] = errors.Location{File: filename, Line: i + 1}
+			tagToLocation[tag] = Location{file: filename, line: i + 1}
 		}
 	}
 }
