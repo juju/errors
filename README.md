@@ -48,8 +48,8 @@ that was the cause.
 
 
 	err := errors.Errorf("original")
-	err = errors.Annotatef("context")
-	err = errors.Annotatef("more context")
+	err = errors.Annotatef(err, "context")
+	err = errors.Annotatef(err, "more context")
 	err.Error() -> "more context: context: original"
 
 Obviously recording the file, line and functions is not very useful if you
