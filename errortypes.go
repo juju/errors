@@ -5,8 +5,6 @@ package errors
 
 import (
 	"fmt"
-
-	"github.com/juju/loggo"
 )
 
 // wrap is a helper to construct an *wrapper.
@@ -161,10 +159,4 @@ func IsNotValid(err error) bool {
 	err = Cause(err)
 	_, ok := err.(*notValid)
 	return ok
-}
-
-// LoggedErrorf logs the error and return an error with the same text.
-func LoggedErrorf(logger loggo.Logger, format string, a ...interface{}) error {
-	logger.Logf(loggo.ERROR, format, a...)
-	return fmt.Errorf(format, a...)
 }
