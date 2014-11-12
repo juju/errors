@@ -248,13 +248,6 @@ IsUnauthorized reports whether err was created with Unauthorizedf() or
 NewUnauthorized().
 
 
-## func LoggedErrorf
-``` go
-func LoggedErrorf(logger loggo.Logger, format string, a ...interface{}) error
-```
-LoggedErrorf logs the error and return an error with the same text.
-
-
 ## func Mask
 ``` go
 func Mask(other error) error
