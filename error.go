@@ -109,6 +109,12 @@ func (e *Err) SetLocation(callDepth int) {
 	e.line = line
 }
 
+// ErrorStack gives access to the error stack for the error without
+// the other package necessarily needing to import juju/errors.
+func (e *Err) ErrorStack() string {
+	return ErrorStack(e)
+}
+
 // Ideally we'd have a way to check identity, but deep equals will do.
 func sameError(e1, e2 error) bool {
 	return reflect.DeepEqual(e1, e2)
