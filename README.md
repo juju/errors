@@ -2,6 +2,8 @@
 # errors
     import "github.com/juju/errors"
 
+[![GoDoc](https://godoc.org/github.com/juju/errors?status.svg)](https://godoc.org/github.com/juju/errors)
+
 The juju/errors provides an easy way to annotate errors without losing the
 orginal error context.
 
@@ -471,6 +473,15 @@ function.
 func (e *Err) Error() string
 ```
 Error implements error.Error.
+
+
+
+### func (\*Err) ErrorStack
+``` go
+func (e *Err) ErrorStack() string
+```
+ErrorStack gives access to the error stack for the error without
+the other package necessarily needing to import juju/errors.
 
 
 
