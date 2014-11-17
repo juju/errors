@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
@@ -187,11 +188,16 @@ func (s *functionSuite) TestDetails(c *gc.C) {
 	checkDetails(c, err2, "[{$TestStack#2$: } {$TestStack#1$: bar} {$TestStack#0$: foo}]")
 }
 
+type tracer interface {
+	StackTrace() []string
+}
+
 func (*functionSuite) TestErrorStack(c *gc.C) {
 	for i, test := range []struct {
 		message   string
 		generator func() error
 		expected  string
+		tracer    bool
 	}{
 		{
 			message: "nil",
@@ -210,6 +216,7 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 				return errors.New("first error") //err single
 			},
 			expected: "$single$: first error",
+			tracer:   true,
 		}, {
 			message: "annotated error",
 			generator: func() error {
@@ -219,6 +226,7 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 			expected: "" +
 				"$annotated-0$: first error\n" +
 				"$annotated-1$: annotation",
+			tracer: true,
 		}, {
 			message: "wrapped error",
 			generator: func() error {
@@ -228,6 +236,7 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 			expected: "" +
 				"$wrapped-0$: first error\n" +
 				"$wrapped-1$: detailed error",
+			tracer: true,
 		}, {
 			message: "annotated wrapped error",
 			generator: func() error {
@@ -239,6 +248,7 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 				"$ann-wrap-0$: first error\n" +
 				"$ann-wrap-1$: detailed error\n" +
 				"$ann-wrap-2$: annotated",
+			tracer: true,
 		}, {
 			message: "traced, and annotated",
 			generator: func() error {
@@ -256,6 +266,7 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 				"$stack-3$: \n" +
 				"$stack-4$: more context\n" +
 				"$stack-5$: ",
+			tracer: true,
 		}, {
 			message: "uncomparable, wrapped with a value error",
 			generator: func() error {
@@ -273,14 +284,22 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 				"$mixed-3$: masked\n" +
 				"$mixed-4$: more context\n" +
 				"$mixed-5$: ",
+			tracer: true,
 		},
 	} {
 		c.Logf("%v: %s", i, test.message)
 		err := test.generator()
 		expected := replaceLocations(test.expected)
-		ok := c.Check(errors.ErrorStack(err), gc.Equals, expected)
+		stack := errors.ErrorStack(err)
+		ok := c.Check(stack, gc.Equals, expected)
 		if !ok {
 			c.Logf("%#v", err)
+		}
+		tracer, ok := err.(tracer)
+		c.Check(ok, gc.Equals, test.tracer)
+		if ok {
+			stackTrace := tracer.StackTrace()
+			c.Check(stackTrace, gc.DeepEquals, strings.Split(stack, "\n"))
 		}
 	}
 }

@@ -109,10 +109,11 @@ func (e *Err) SetLocation(callDepth int) {
 	e.line = line
 }
 
-// ErrorStack gives access to the error stack for the error without
-// the other package necessarily needing to import juju/errors.
-func (e *Err) ErrorStack() string {
-	return ErrorStack(e)
+// StackTrace returns one string for each location recorded in the stack of
+// errors. The first value is the originating error, with a line for each
+// other annotation or tracing of the error.
+func (e *Err) StackTrace() []string {
+	return errorStack(e)
 }
 
 // Ideally we'd have a way to check identity, but deep equals will do.
