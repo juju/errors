@@ -476,15 +476,6 @@ Error implements error.Error.
 
 
 
-### func (\*Err) ErrorStack
-``` go
-func (e *Err) ErrorStack() string
-```
-ErrorStack gives access to the error stack for the error without
-the other package necessarily needing to import juju/errors.
-
-
-
 ### func (\*Err) Location
 ``` go
 func (e *Err) Location() (filename string, line int)
@@ -510,6 +501,16 @@ func (e *Err) SetLocation(callDepth int)
 ```
 SetLocation records the source location of the error at callDepth stack
 frames above the call.
+
+
+
+### func (\*Err) StackTrace
+``` go
+func (e *Err) StackTrace() []string
+```
+StackTrace returns one string for each location recorded in the stack of
+errors. The first value is the originating error, with a line for each
+other annotation or tracing of the error.
 
 
 
