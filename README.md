@@ -2,6 +2,8 @@
 # errors
     import "github.com/juju/errors"
 
+[![GoDoc](https://godoc.org/github.com/juju/errors?status.svg)](https://godoc.org/github.com/juju/errors)
+
 The juju/errors provides an easy way to annotate errors without losing the
 orginal error context.
 
@@ -499,6 +501,16 @@ func (e *Err) SetLocation(callDepth int)
 ```
 SetLocation records the source location of the error at callDepth stack
 frames above the call.
+
+
+
+### func (\*Err) StackTrace
+``` go
+func (e *Err) StackTrace() []string
+```
+StackTrace returns one string for each location recorded in the stack of
+errors. The first value is the originating error, with a line for each
+other annotation or tracing of the error.
 
 
 

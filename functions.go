@@ -274,9 +274,14 @@ func Details(err error) string {
 //     github.com/juju/errors/annotation_test.go:196: more context
 //     github.com/juju/errors/annotation_test.go:197:
 func ErrorStack(err error) string {
+	return strings.Join(errorStack(err), "\n")
+}
+
+func errorStack(err error) []string {
 	if err == nil {
-		return ""
+		return nil
 	}
+
 	// We want the first error first
 	var lines []string
 	for {
@@ -321,5 +326,5 @@ func ErrorStack(err error) string {
 	for i := len(lines); i > 0; i-- {
 		result = append(result, lines[i-1])
 	}
-	return strings.Join(result, "\n")
+	return result
 }
