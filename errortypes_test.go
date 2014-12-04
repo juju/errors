@@ -28,6 +28,7 @@ type errorInfo struct {
 // errors, add them here as well to include them in tests.
 var allErrors = []*errorInfo{
 	&errorInfo{errors.IsNotFound, errors.NotFoundf, errors.NewNotFound, " not found"},
+	&errorInfo{errors.IsUserNotFound, errors.UserNotFoundf, errors.NewUserNotFound, " user not found"},
 	&errorInfo{errors.IsUnauthorized, errors.Unauthorizedf, errors.NewUnauthorized, ""},
 	&errorInfo{errors.IsNotImplemented, errors.NotImplementedf, errors.NewNotImplemented, " not implemented"},
 	&errorInfo{errors.IsAlreadyExists, errors.AlreadyExistsf, errors.NewAlreadyExists, " already exists"},
