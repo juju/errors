@@ -41,6 +41,30 @@ func IsNotFound(err error) bool {
 	return ok
 }
 
+// userNotFound represents an error when an inexistent user is looked up.
+type userNotFound struct {
+	Err
+}
+
+// UserNotFoundf returns an error which satisfies IsUserNotFound().
+func UserNotFoundf(format string, args ...interface{}) error {
+	return &userNotFound{wrap(nil, format, " user not found", args...)}
+}
+
+// NewUserNotFound returns an error which wraps err and satisfies
+// IsUserNotFound().
+func NewUserNotFound(err error, msg string) error {
+	return &userNotFound{wrap(err, msg, "")}
+}
+
+// IsUserNotFound reports whether err was created with UserNotFoundf() or
+// NewUserNotFound().
+func IsUserNotFound(err error) bool {
+	err = Cause(err)
+	_, ok := err.(*userNotFound)
+	return ok
+}
+
 // unauthorized represents an error when an operation is unauthorized.
 type unauthorized struct {
 	Err
