@@ -35,6 +35,7 @@ var allErrors = []*errorInfo{
 	&errorInfo{errors.IsNotSupported, errors.NotSupportedf, errors.NewNotSupported, " not supported"},
 	&errorInfo{errors.IsNotValid, errors.NotValidf, errors.NewNotValid, " not valid"},
 	&errorInfo{errors.IsNotProvisioned, errors.NotProvisionedf, errors.NewNotProvisioned, " not provisioned"},
+	&errorInfo{errors.IsNotAssigned, errors.NotAssignedf, errors.NewNotAssigned, " not assigned"},
 }
 
 type errorTypeSuite struct{}
