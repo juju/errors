@@ -55,7 +55,7 @@ func replaceLocations(line string) string {
 func location(tag string) Location {
 	loc, ok := tagToLocation[tag]
 	if !ok {
-		panic(fmt.Errorf("tag %q not found", tag))
+		panic(fmt.Sprintf("tag %q not found", tag))
 	}
 	return loc
 }
@@ -82,7 +82,7 @@ func setLocationsForErrorTags(filename string) {
 		if j := strings.Index(line, "//err "); j >= 0 {
 			tag := line[j+len("//err "):]
 			if _, found := tagToLocation[tag]; found {
-				panic(fmt.Errorf("tag %q already processed previously"))
+				panic(fmt.Sprintf("tag %q already processed previously", tag))
 			}
 			tagToLocation[tag] = Location{file: filename, line: i + 1}
 		}
