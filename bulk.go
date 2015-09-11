@@ -17,7 +17,7 @@ type BulkErrors struct {
 }
 
 // NewBulkErrors returns a new BulkErrors primed for the provided IDs.
-// It also returns a function that sets the error for one of the IDs.
+// It also returns a function that sets the error for any of the IDs.
 // That function returns false if the provided ID is not recognized and
 // true otherwise.
 func NewBulkErrors(ids ...string) (*BulkErrors, func(string, error) bool) {
