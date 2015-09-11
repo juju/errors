@@ -100,6 +100,30 @@ func (*bulkSuite) TestErrorStringEmpty(c *gc.C) {
 	c.Check(err, gc.ErrorMatches, `0/0 items failed a bulk request`)
 }
 
+func (*bulkSuite) TestNoErrorsTrue(c *gc.C) {
+	ids := []string{"a", "b", "c"}
+	err, _ := errors.NewBulkError(ids...)
+	noErrors := err.NoErrors()
+
+	c.Check(noErrors, jc.IsTrue)
+}
+
+func (*bulkSuite) TestNoErrorsFalse(c *gc.C) {
+	ids := []string{"a", "b", "c"}
+	err, setError := errors.NewBulkError(ids...)
+	setError("a", errors.Errorf("a failed"))
+	noErrors := err.NoErrors()
+
+	c.Check(noErrors, jc.IsFalse)
+}
+
+func (*bulkSuite) TestNoErrorsEmpty(c *gc.C) {
+	err, _ := errors.NewBulkError()
+	noErrors := err.NoErrors()
+
+	c.Check(noErrors, jc.IsTrue)
+}
+
 func (*bulkSuite) TestIDsOkay(c *gc.C) {
 	expected := []string{"a", "b", "c"}
 	err, _ := errors.NewBulkError(expected...)

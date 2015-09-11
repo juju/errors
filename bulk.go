@@ -63,6 +63,11 @@ func (be BulkError) Error() string {
 	return msg
 }
 
+// NoErrors determines whether or not the BulkError has any item errors set.
+func (be BulkError) NoErrors() bool {
+	return be.count == 0
+}
+
 // IDs returns a new list containing the IDs in the originally provided order.
 func (be BulkError) IDs() []string {
 	ids := make([]string, len(be.ids))
