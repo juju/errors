@@ -8,20 +8,20 @@ import (
 	"strings"
 )
 
-// BulkErrors represents when a bulk request fails for one or more of
+// BulkError represents when a bulk request fails for one or more of
 // the items.
-type BulkErrors struct {
+type BulkError struct {
 	ids    []string
 	errors map[string]error
 	count  int
 }
 
-// NewBulkErrors returns a new BulkErrors primed for the provided IDs.
+// NewBulkError returns a new BulkError primed for the provided IDs.
 // It also returns a function that sets the error for any of the IDs.
 // That function returns false if the provided ID is not recognized and
 // true otherwise.
-func NewBulkErrors(ids ...string) (*BulkErrors, func(string, error) bool) {
-	be := &BulkErrors{
+func NewBulkError(ids ...string) (*BulkError, func(string, error) bool) {
+	be := &BulkError{
 		ids:    ids,
 		errors: make(map[string]error, len(ids)),
 	}
@@ -31,7 +31,7 @@ func NewBulkErrors(ids ...string) (*BulkErrors, func(string, error) bool) {
 	return be, be.setError
 }
 
-func (be *BulkErrors) setError(id string, err error) bool {
+func (be *BulkError) setError(id string, err error) bool {
 	existing, ok := be.errors[id]
 	if !ok {
 		return false
@@ -47,7 +47,7 @@ func (be *BulkErrors) setError(id string, err error) bool {
 }
 
 // Error returns the error string for the error.
-func (be BulkErrors) Error() string {
+func (be BulkError) Error() string {
 	msg := fmt.Sprintf("%d/%d items failed a bulk request", be.count, len(be.ids))
 	if be.count == 0 {
 		return msg
@@ -64,7 +64,7 @@ func (be BulkErrors) Error() string {
 }
 
 // IDs returns a new list containing the IDs in the originally provided order.
-func (be BulkErrors) IDs() []string {
+func (be BulkError) IDs() []string {
 	ids := make([]string, len(be.ids))
 	copy(ids, be.ids)
 	return ids
@@ -72,7 +72,7 @@ func (be BulkErrors) IDs() []string {
 
 // Enumerate returns the list of errors (or nils) corresponding to the
 // original IDs.
-func (be BulkErrors) Enumerate() []error {
+func (be BulkError) Enumerate() []error {
 	errors := make([]error, len(be.ids))
 	for i, id := range be.ids {
 		errors[i] = be.errors[id]
@@ -80,9 +80,9 @@ func (be BulkErrors) Enumerate() []error {
 	return errors
 }
 
-// IsBulkErrors reports whether err was created with NewBulkErrors().
-func IsBulkErrors(err error) bool {
+// IsBulkError reports whether err was created with NewBulkError().
+func IsBulkError(err error) bool {
 	err = Cause(err)
-	_, ok := err.(*BulkErrors)
+	_, ok := err.(*BulkError)
 	return ok
 }
