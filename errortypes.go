@@ -233,3 +233,52 @@ func IsNotAssigned(err error) bool {
 	_, ok := err.(*notAssigned)
 	return ok
 }
+
+// badRequest represents an error when a request has bad parameters.
+type badRequest struct {
+	Err
+}
+
+// BadRequestf returns an error which satisfies IsBadRequest().
+func BadRequestf(format string, args ...interface{}) error {
+	return &badRequest{wrap(nil, format, "", args...)}
+}
+
+// NewBadRequest returns an error which wraps err that satisfies
+// IsBadRequest().
+func NewBadRequest(err error, msg string) error {
+	return &badRequest{wrap(err, msg, "")}
+}
+
+// IsBadRequest reports whether err was created with BadRequestf() or
+// NewBadRequest().
+func IsBadRequest(err error) bool {
+	err = Cause(err)
+	_, ok := err.(*badRequest)
+	return ok
+}
+
+// methodNotAllowed represents an error when an HTTP request
+// is made with an inappropriate method.
+type methodNotAllowed struct {
+	Err
+}
+
+// MethodNotAllowedf returns an error which satisfies IsMethodNotAllowed().
+func MethodNotAllowedf(format string, args ...interface{}) error {
+	return &methodNotAllowed{wrap(nil, format, "", args...)}
+}
+
+// NewMethodNotAllowed returns an error which wraps err that satisfies
+// IsMethodNotAllowed().
+func NewMethodNotAllowed(err error, msg string) error {
+	return &methodNotAllowed{wrap(err, msg, "")}
+}
+
+// IsMethodNotAllowed reports whether err was created with MethodNotAllowedf() or
+// NewMethodNotAllowed().
+func IsMethodNotAllowed(err error) bool {
+	err = Cause(err)
+	_, ok := err.(*methodNotAllowed)
+	return ok
+}
