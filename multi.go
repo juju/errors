@@ -20,10 +20,6 @@ type MultiError struct {
 
 // NewMultiError returns a new MultiError and a function that may be
 // used to add errors to the set.
-
-// It also returns a function that sets the error for any of the IDs.
-// That function returns false if the provided ID is not recognized and
-// true otherwise.
 func NewMultiError() (*MultiError, func(error, string)) {
 	multi := &MultiError{}
 	return multi, multi.setError
@@ -74,6 +70,8 @@ func (multi MultiError) Errors() ([]error, []string) {
 	}
 	return errors, ids
 }
+
+// TODO(ericsnow) Expose collate()?
 
 func (multi MultiError) collate() (map[string][]error, []error, []string) {
 	collated := make(map[string][]error)
