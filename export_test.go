@@ -13,11 +13,5 @@ var TrimGoPath = trimGoPath
 
 func ExposeMultiError(err error) ([]error, []string) {
 	multi := err.(*MultiError)
-	var errors []error
-	var ids []string
-	for _, item := range multi.errors {
-		errors = append(errors, item.err)
-		ids = append(ids, item.id)
-	}
-	return errors, ids
+	return multi.errors, multi.ids
 }

@@ -8,26 +8,14 @@ import (
 	"strings"
 )
 
-type multiErrorItem struct {
-	err error
-	id  string
-}
-
-// String returns a string representation of the item.
-func (mei multiErrorItem) String() string {
-	if mei.id == "" {
-		return fmt.Sprintf("%v", mei.err)
-	} else {
-		return fmt.Sprintf("(%q) %v", mei.id, mei.err)
-	}
-}
+// TODO(ericsnow) Make thread-safe?
 
 // MultiError represents an ordered set of errors, aggregated into one.
 // Each error may be associated with a string ID, which does not need
 // to be unique.
 type MultiError struct {
-	errors []multiErrorItem
-	byID   map[string][]error
+	errors []error
+	ids    []string
 }
 
 // NewMultiError returns a new MultiError and a function that may be
@@ -37,33 +25,40 @@ type MultiError struct {
 // That function returns false if the provided ID is not recognized and
 // true otherwise.
 func NewMultiError() (*MultiError, func(error, string)) {
-	multi := &MultiError{
-		byID: make(map[string][]error),
-	}
+	multi := &MultiError{}
 	return multi, multi.setError
 }
 
 func (multi *MultiError) setError(err error, id string) {
-	multi.byID[id] = append(multi.byID[id], err)
-	multi.errors = append(multi.errors, multiErrorItem{err, id})
+	multi.errors = append(multi.errors, err)
+	multi.ids = append(multi.ids, id)
 }
 
 // Error returns the error string for the error.
 func (multi MultiError) Error() string {
-	msg := fmt.Sprintf("%d errors", len(multi.errors))
-	if len(multi.errors) == 0 {
+	byID, errors, ids := multi.collate()
+
+	msg := fmt.Sprintf("%d errors", len(errors))
+	if len(errors) == 0 {
 		return msg
 	}
-	if len(multi.byID) > 1 {
+	if len(byID) > 1 {
 		// TODO(ericsnow) Don't count the empty string?
-		msg += fmt.Sprintf(" (for %d IDs)", len(multi.byID))
+		msg += fmt.Sprintf(" (for %d IDs)", len(byID))
 	}
 
-	var errors []string
-	for _, err := range multi.errors {
-		errors = append(errors, err.String())
+	var errStrs []string
+	for i, err := range errors {
+		id := ids[i]
+		var msg string
+		if id != "" {
+			msg = fmt.Sprintf("%v", err)
+		} else {
+			msg = fmt.Sprintf("(%q) %v", id, err)
+		}
+		errStrs = append(errStrs, msg)
 	}
-	msg += ": " + strings.Join(errors, ",")
+	msg += ": " + strings.Join(errStrs, ",")
 	return msg
 }
 
@@ -72,11 +67,22 @@ func (multi MultiError) Error() string {
 func (multi MultiError) Errors() ([]error, []string) {
 	var errors []error
 	var ids []string
-	for _, item := range multi.errors {
-		errors = append(errors, item.err)
-		ids = append(ids, item.id)
+	for i, err := range multi.errors {
+		id := multi.ids[i]
+		errors = append(errors, err)
+		ids = append(ids, id)
 	}
 	return errors, ids
+}
+
+func (multi MultiError) collate() (map[string][]error, []error, []string) {
+	collated := make(map[string][]error)
+	errors, ids := multi.Errors()
+	for i, err := range errors {
+		id := ids[i]
+		collated[id] = append(collated[id], err)
+	}
+	return collated, errors, ids
 }
 
 // IsMultiError reports whether err was created with NewMultiError().
