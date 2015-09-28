@@ -8,8 +8,18 @@ import (
 	"strings"
 )
 
-// BulkError represents when a bulk request fails for one or more of
-// the items.
+// BulkError represents the case where multiple items are handled and at
+// least one of them failed. The [ordered] set of items, each identified
+// by a unique string, is intrinsic to the BulkError. Consequently,
+// those IDs must be provided when the BulkError is created and will not
+// change.
+//
+// An error for any given ID may be set, reset, or unset using the
+// function returned from NewBulkError. All IDs and any associated
+// errors are accessible via BulkError methods.
+//
+// BulkError is relevant for several use cases, including bulk API
+// requests.
 type BulkError struct {
 	ids    []string
 	errors map[string]error
