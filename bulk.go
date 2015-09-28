@@ -5,7 +5,6 @@ package errors
 
 import (
 	"fmt"
-	"strings"
 )
 
 // BulkError represents the case where multiple items are handled and at
@@ -58,19 +57,7 @@ func (be *BulkError) setError(id string, err error) bool {
 
 // Error returns the error string for the error.
 func (be BulkError) Error() string {
-	msg := fmt.Sprintf("%d/%d items failed a bulk request", be.count, len(be.ids))
-	if be.count == 0 {
-		return msg
-	}
-
-	var errors []string
-	for _, id := range be.ids {
-		if err := be.errors[id]; err != nil {
-			errors = append(errors, fmt.Sprintf("(%s) %v", id, err))
-		}
-	}
-	msg += ": " + strings.Join(errors, "; ")
-	return msg
+	return fmt.Sprintf("%d/%d items failed a bulk request", be.count, len(be.ids))
 }
 
 // NoErrors determines whether or not the BulkError has any item errors set.

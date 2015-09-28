@@ -5,7 +5,6 @@ package errors
 
 import (
 	"fmt"
-	"strings"
 )
 
 // TODO(ericsnow) Make thread-safe?
@@ -32,7 +31,7 @@ func (multi *MultiError) setError(err error, id string) {
 
 // Error returns the error string for the error.
 func (multi MultiError) Error() string {
-	byID, errors, ids := multi.collate()
+	byID, errors, _ := multi.collate()
 
 	msg := fmt.Sprintf("%d errors", len(errors))
 	if len(errors) == 0 {
@@ -42,19 +41,6 @@ func (multi MultiError) Error() string {
 		// TODO(ericsnow) Don't count the empty string?
 		msg += fmt.Sprintf(" (for %d IDs)", len(byID))
 	}
-
-	var errStrs []string
-	for i, err := range errors {
-		id := ids[i]
-		var msg string
-		if id != "" {
-			msg = fmt.Sprintf("%v", err)
-		} else {
-			msg = fmt.Sprintf("(%s) %v", id, err)
-		}
-		errStrs = append(errStrs, msg)
-	}
-	msg += ": " + strings.Join(errStrs, "; ")
 	return msg
 }
 

@@ -70,7 +70,7 @@ func (*bulkSuite) TestErrorStringFull(c *gc.C) {
 		setError(id, expected[i])
 	}
 
-	c.Check(err, gc.ErrorMatches, `3/3 items failed a bulk request: .*`)
+	c.Check(err, gc.ErrorMatches, `3/3 items failed a bulk request`)
 }
 
 func (*bulkSuite) TestErrorStringPartial(c *gc.C) {
@@ -85,7 +85,7 @@ func (*bulkSuite) TestErrorStringPartial(c *gc.C) {
 		setError(id, expected[i])
 	}
 
-	c.Check(err, gc.ErrorMatches, `2/3 items failed a bulk request: .*`)
+	c.Check(err, gc.ErrorMatches, `2/3 items failed a bulk request`)
 }
 
 func (*bulkSuite) TestErrorStringNone(c *gc.C) {
