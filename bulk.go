@@ -55,6 +55,8 @@ func (be *BulkError) setError(id string, err error) bool {
 	return true
 }
 
+// TODO(ericsnow) Follow the precedent of ErrorResults.Combine()?
+
 // Error returns the error string for the error.
 func (be BulkError) Error() string {
 	return fmt.Sprintf("%d/%d items failed a bulk request", be.count, len(be.ids))
@@ -64,6 +66,8 @@ func (be BulkError) Error() string {
 func (be BulkError) NoErrors() bool {
 	return be.count == 0
 }
+
+// TODO(ericsnow) Add a OneError() method a la ErrorResults?
 
 // IDs returns a new list containing the IDs in the originally provided order.
 func (be BulkError) IDs() []string {
