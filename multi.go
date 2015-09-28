@@ -54,11 +54,11 @@ func (multi MultiError) Error() string {
 		if id != "" {
 			msg = fmt.Sprintf("%v", err)
 		} else {
-			msg = fmt.Sprintf("(%q) %v", id, err)
+			msg = fmt.Sprintf("(%s) %v", id, err)
 		}
 		errStrs = append(errStrs, msg)
 	}
-	msg += ": " + strings.Join(errStrs, ",")
+	msg += ": " + strings.Join(errStrs, "; ")
 	return msg
 }
 

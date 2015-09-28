@@ -66,10 +66,10 @@ func (be BulkError) Error() string {
 	var errors []string
 	for _, id := range be.ids {
 		if err := be.errors[id]; err != nil {
-			errors = append(errors, fmt.Sprintf("(%q) %v", id, err))
+			errors = append(errors, fmt.Sprintf("(%s) %v", id, err))
 		}
 	}
-	msg += ": " + strings.Join(errors, ",")
+	msg += ": " + strings.Join(errors, "; ")
 	return msg
 }
 
