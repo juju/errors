@@ -132,57 +132,6 @@ func (*multiSuite) TestErrorsEmpty(c *gc.C) {
 	c.Check(ids, gc.HasLen, 0)
 }
 
-/*
-func (*multiSuite) TestIDsOkay(c *gc.C) {
-	expected := []string{"a", "b", "c"}
-	err, setError := errors.NewMultiError()
-	for _, id := range expected {
-		setError(errors.Errorf(id), id)
-	}
-	ids := err.IDs()
-
-	c.Check(ids, jc.DeepEquals, expected)
-}
-
-func (*multiSuite) TestIDsMixed(c *gc.C) {
-	original := []string{"a", "b", "", "b"}
-	err, setError := errors.NewMultiError()
-	for _, id := range original {
-		setError(errors.Errorf(id), id)
-	}
-	ids := err.IDs()
-
-	c.Check(ids, jc.DeepEquals, []string{"a", "b"})
-}
-
-func (*multiSuite) TestIDsEmpty(c *gc.C) {
-	err, _ := errors.NewMultiError()
-	ids := err.IDs()
-
-	c.Check(ids, gc.HasLen, 0)
-}
-*/
-
-/*
-func (*multiSuite) TestCountOkay(c *gc.C) {
-	ids := []string{"", "", ""}
-	err, setError := errors.NewMultiError()
-	for _, id := range ids {
-		setError(errors.Errorf(id), id)
-	}
-	count := err.Count()
-
-	c.Check(count, gc.Equals, 3)
-}
-
-func (*multiSuite) TestCountEmpty(c *gc.C) {
-	err, _ := errors.NewMultiError()
-	count := err.Count()
-
-	c.Check(count, gc.Equals, 0)
-}
-*/
-
 func (*multiSuite) TestIsMultiErrorDirect(c *gc.C) {
 	err, _ := errors.NewMultiError()
 	ok := errors.IsMultiError(err)
