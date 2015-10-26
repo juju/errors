@@ -328,3 +328,49 @@ func errorStack(err error) []string {
 	}
 	return result
 }
+
+// CauseEquals tests, if this or any cause of this error is equal to another error, or it's cause
+//
+// For example:
+//		ErrNotFound := errors.New("Not found")
+//		inSome := errors.Trace(ErrNotFound)
+//		veryDeep := errors.Trace(inSome)
+//		returned := errors.Trace(veryDeep)
+//		if errors.CauseEquals(ErrNotFound, returned) {
+//			fmt.Println("Can return soft error 404")
+//		} else {
+//			fmt.Println("Serious error, returning with code 500")
+//		}
+func CauseEquals(err1, err2 error) bool {
+	var maxDeep = 1000
+	if err1 == err2 { // Same or nil == nil
+		return true
+	}
+	if (err1 == nil && err2 != nil) || (err2 == nil && err1 != nil) {
+		return false
+	}
+
+	var ok1 = true
+	var ok2 = true
+	for error1 := err1; ok1 && error1 != nil; {
+		for error2 := err2; ok2 && error2 != nil; {
+			if error1 == error2 {
+				return true
+			}
+
+			// Prevent cycle dependencies and infinite loops
+			if maxDeep--; maxDeep <= 0 {
+				return false
+			}
+
+			if cause2, ok2 := error2.(*Err); ok2 {
+				error2 = cause2.Cause()
+			}
+		}
+		if cause1, ok1 := error1.(*Err); ok1 {
+			error1 = cause1.Cause()
+		}
+	}
+
+	return false
+}
