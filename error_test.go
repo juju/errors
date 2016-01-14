@@ -128,6 +128,23 @@ func (*errorsSuite) TestNewErr(c *gc.C) {
 	c.Assert(errors.Details(err), jc.Contains, tagToLocation["embedErr"].String())
 }
 
+func newEmbedWithCause(other error, format string, args ...interface{}) *embed {
+	err := &embed{errors.NewErrWithCause(other, format, args...)}
+	err.SetLocation(1)
+	return err
+}
+
+func (*errorsSuite) TestNewErrWithCause(c *gc.C) {
+	if runtime.Compiler == "gccgo" {
+		c.Skip("gccgo can't determine the location")
+	}
+	causeErr := fmt.Errorf("external error")
+	err := newEmbedWithCause(causeErr, "testing %d", 43) //err embedCause
+	c.Assert(err.Error(), gc.Equals, "testing 43: external error")
+	c.Assert(errors.Cause(err), gc.Equals, causeErr)
+	c.Assert(errors.Details(err), jc.Contains, tagToLocation["embedCause"].String())
+}
+
 var _ error = (*embed)(nil)
 
 // This is an uncomparable error type, as it is a struct that supports the
