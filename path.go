@@ -17,6 +17,9 @@ var goPath string
 
 func init() {
 	_, file, _, ok := runtime.Caller(0)
+	if file == "?" {
+		return
+	}
 	if ok {
 		// We know that the end of the file should be:
 		// github.com/juju/errors/path.go
