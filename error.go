@@ -124,6 +124,30 @@ func (e *Err) Error() string {
 	return fmt.Sprintf("%s: %v", e.message, err)
 }
 
+// Format implements fmt.Formatter
+// When printing errors with %+v it also prints the stack trace.
+// %#v unsurprisingly will print the real underlying type.
+func (e *Err) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		switch {
+		case s.Flag('+'):
+			fmt.Fprintf(s, "%s\n%s", e.Error(), ErrorStack(e))
+			return
+		case s.Flag('#'):
+			fmt.Fprintf(s, "%#v", (*unformatter)(e))
+		}
+		fallthrough
+	case 's':
+		fmt.Fprintf(s, "%s", e.Error())
+	}
+}
+
+// helper for Format
+type unformatter Err
+
+func (unformatter) Format() { /* break the fmt.Formatter interface */ }
+
 // SetLocation records the source location of the error at callDepth stack
 // frames above the call.
 func (e *Err) SetLocation(callDepth int) {
