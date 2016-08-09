@@ -73,8 +73,8 @@ func (*functionSuite) TestDeferredAnnotatef(c *gc.C) {
 	first := errors.New("first")
 	test := func() (err error) {
 		defer errors.DeferredAnnotatef(&err, "deferred %s", "annotate")
-		return first
-	} //err deferredAnnotate
+		return first //err deferredAnnotate
+	}
 	err := test()
 	c.Assert(err.Error(), gc.Equals, "deferred annotate: first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
