@@ -132,10 +132,13 @@ func (e *Err) Format(s fmt.State, verb rune) {
 	case 'v':
 		switch {
 		case s.Flag('+'):
-			fmt.Fprintf(s, "%s\n%s", e.Error(), ErrorStack(e))
+			fmt.Fprintf(s, "%s", ErrorStack(e))
 			return
 		case s.Flag('#'):
+			// avoid infinite recursion by wrapping e into a type
+			// that doesn't implement Formatter.
 			fmt.Fprintf(s, "%#v", (*unformatter)(e))
+			return
 		}
 		fallthrough
 	case 's':
