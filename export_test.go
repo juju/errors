@@ -10,3 +10,8 @@ func GoPath() string {
 }
 
 var TrimGoPath = trimGoPath
+
+func ExposeMultiError(err error) ([]error, []string) {
+	multi := err.(*MultiError)
+	return multi.errors, multi.ids
+}
