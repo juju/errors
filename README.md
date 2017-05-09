@@ -129,6 +129,13 @@ For example:
 	}
 
 
+## func BadRequestf
+``` go
+func BadRequestf(format string, args ...interface{}) error
+```
+BadRequestf returns an error which satisfies IsBadRequest().
+
+
 ## func Cause
 ``` go
 func Cause(err error) error
@@ -138,6 +145,26 @@ original error, or the result of a Wrap or Mask call.
 
 Cause is the usual way to diagnose errors that may have been wrapped by
 the other errors functions.
+
+
+## func CauseEquals
+``` go
+func CauseEquals(err1, err2 error) bool
+```
+CauseEquals tests, if this or any cause of this error is equal to another error, or it's cause
+
+For example:
+
+
+	ErrNotFound := errors.New("Not found")
+	inSome := errors.Trace(ErrNotFound)
+	veryDeep := errors.Trace(inSome)
+	returned := errors.Trace(veryDeep)
+	if errors.CauseEquals(ErrNotFound, returned) {
+		fmt.Println("Can return soft error 404")
+	} else {
+		fmt.Println("Serious error, returning with code 500")
+	}
 
 
 ## func DeferredAnnotatef
@@ -210,6 +237,30 @@ IsAlreadyExists reports whether the error was created with
 AlreadyExistsf() or NewAlreadyExists().
 
 
+## func IsBadRequest
+``` go
+func IsBadRequest(err error) bool
+```
+IsBadRequest reports whether err was created with BadRequestf() or
+NewBadRequest().
+
+
+## func IsMethodNotAllowed
+``` go
+func IsMethodNotAllowed(err error) bool
+```
+IsMethodNotAllowed reports whether err was created with MethodNotAllowedf() or
+NewMethodNotAllowed().
+
+
+## func IsNotAssigned
+``` go
+func IsNotAssigned(err error) bool
+```
+IsNotAssigned reports whether err was created with NotAssignedf() or
+NewNotAssigned().
+
+
 ## func IsNotFound
 ``` go
 func IsNotFound(err error) bool
@@ -224,6 +275,14 @@ func IsNotImplemented(err error) bool
 ```
 IsNotImplemented reports whether err was created with
 NotImplementedf() or NewNotImplemented().
+
+
+## func IsNotProvisioned
+``` go
+func IsNotProvisioned(err error) bool
+```
+IsNotProvisioned reports whether err was created with NotProvisionedf() or
+NewNotProvisioned().
 
 
 ## func IsNotSupported
@@ -250,6 +309,14 @@ IsUnauthorized reports whether err was created with Unauthorizedf() or
 NewUnauthorized().
 
 
+## func IsUserNotFound
+``` go
+func IsUserNotFound(err error) bool
+```
+IsUserNotFound reports whether err was created with UserNotFoundf() or
+NewUserNotFound().
+
+
 ## func Mask
 ``` go
 func Mask(other error) error
@@ -265,6 +332,13 @@ Mask masks the given error with the given format string and arguments (like
 fmt.Sprintf), returning a new error that maintains the error stack, but
 hides the underlying error type.  The error string still contains the full
 annotations. If you want to hide the annotations, call Wrap.
+
+
+## func MethodNotAllowedf
+``` go
+func MethodNotAllowedf(format string, args ...interface{}) error
+```
+MethodNotAllowedf returns an error which satisfies IsMethodNotAllowed().
 
 
 ## func New
@@ -288,6 +362,30 @@ NewAlreadyExists returns an error which wraps err and satisfies
 IsAlreadyExists().
 
 
+## func NewBadRequest
+``` go
+func NewBadRequest(err error, msg string) error
+```
+NewBadRequest returns an error which wraps err that satisfies
+IsBadRequest().
+
+
+## func NewMethodNotAllowed
+``` go
+func NewMethodNotAllowed(err error, msg string) error
+```
+NewMethodNotAllowed returns an error which wraps err that satisfies
+IsMethodNotAllowed().
+
+
+## func NewNotAssigned
+``` go
+func NewNotAssigned(err error, msg string) error
+```
+NewNotAssigned returns an error which wraps err that satisfies
+IsNotAssigned().
+
+
 ## func NewNotFound
 ``` go
 func NewNotFound(err error, msg string) error
@@ -302,6 +400,14 @@ func NewNotImplemented(err error, msg string) error
 ```
 NewNotImplemented returns an error which wraps err and satisfies
 IsNotImplemented().
+
+
+## func NewNotProvisioned
+``` go
+func NewNotProvisioned(err error, msg string) error
+```
+NewNotProvisioned returns an error which wraps err that satisfies
+IsNotProvisioned().
 
 
 ## func NewNotSupported
@@ -327,6 +433,21 @@ NewUnauthorized returns an error which wraps err and satisfies
 IsUnauthorized().
 
 
+## func NewUserNotFound
+``` go
+func NewUserNotFound(err error, msg string) error
+```
+NewUserNotFound returns an error which wraps err and satisfies
+IsUserNotFound().
+
+
+## func NotAssignedf
+``` go
+func NotAssignedf(format string, args ...interface{}) error
+```
+NotAssignedf returns an error which satisfies IsNotAssigned().
+
+
 ## func NotFoundf
 ``` go
 func NotFoundf(format string, args ...interface{}) error
@@ -339,6 +460,13 @@ NotFoundf returns an error which satisfies IsNotFound().
 func NotImplementedf(format string, args ...interface{}) error
 ```
 NotImplementedf returns an error which satisfies IsNotImplemented().
+
+
+## func NotProvisionedf
+``` go
+func NotProvisionedf(format string, args ...interface{}) error
+```
+NotProvisionedf returns an error which satisfies IsNotProvisioned().
 
 
 ## func NotSupportedf
@@ -376,6 +504,13 @@ For example:
 func Unauthorizedf(format string, args ...interface{}) error
 ```
 Unauthorizedf returns an error which satisfies IsUnauthorized().
+
+
+## func UserNotFoundf
+``` go
+func UserNotFoundf(format string, args ...interface{}) error
+```
+UserNotFoundf returns an error which satisfies IsUserNotFound().
 
 
 ## func Wrap

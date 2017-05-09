@@ -303,3 +303,154 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 		}
 	}
 }
+
+func (*errorsSuite) TestCauseEquals(c *gc.C) {
+	level1 := errors.New("Level 1")
+	level2 := errors.Trace(level1)
+	level3 := errors.Trace(level2)
+	level4 := errors.Trace(level3)
+	level5 := errors.Trace(level4)
+	annotated6 := errors.Annotate(level5, "With annotation")
+	annotated7 := errors.Annotate(annotated6, "With another")
+	separate := errors.New("Separate")
+	var cycle error
+	cycle = errors.Trace(cycle)
+
+	for i, test := range []struct {
+		message string
+		error1  error
+		error2  error
+		equals  bool
+	}{
+		{
+			message: "Same are equal (1)",
+			error1:  level1,
+			error2:  level1,
+			equals:  true,
+		},
+		{
+			message: "Same are equal (2)",
+			error1:  level3,
+			error2:  level3,
+			equals:  true,
+		},
+		{
+			message: "Different are not equal (1-s)",
+			error1:  level1,
+			error2:  separate,
+			equals:  false,
+		},
+		{
+			message: "Different are not equal (2-s)",
+			error1:  level1,
+			error2:  separate,
+			equals:  false,
+		},
+		{
+			message: "Different are not equal (3-s)",
+			error1:  level1,
+			error2:  separate,
+			equals:  false,
+		},
+		{
+			message: "Different are not equal (5-s)",
+			error1:  level1,
+			error2:  separate,
+			equals:  false,
+		},
+		{
+			message: "Hierarchy equal (1-2)",
+			error1:  level1,
+			error2:  level2,
+			equals:  true,
+		},
+		{
+			message: "Hierarchy equal (1-3)",
+			error1:  level1,
+			error2:  level3,
+			equals:  true,
+		},
+		{
+			message: "Hierarchy equal (1-4)",
+			error1:  level1,
+			error2:  level4,
+			equals:  true,
+		},
+		{
+			message: "Hierarchy equal (1-5)",
+			error1:  level1,
+			error2:  level5,
+			equals:  true,
+		},
+		{
+			message: "Hierarchy equal (3-4)",
+			error1:  level3,
+			error2:  level4,
+			equals:  true,
+		},
+		{
+			message: "Hierarchy equal (2-5)",
+			error1:  level2,
+			error2:  level5,
+			equals:  true,
+		},
+		{
+			message: "Short cycles should be equal",
+			error1:  cycle,
+			error2:  cycle,
+			equals:  true,
+		},
+		{
+			message: "Long cycles should not be infinite (1)",
+			error1:  cycle,
+			error2:  separate,
+			equals:  false,
+		},
+		{
+			message: "Long cycles should not be infinite (2)",
+			error1:  cycle,
+			error2:  level4,
+			equals:  false,
+		},
+		{
+			message: "Error and nil",
+			error1:  level3,
+			error2:  nil,
+			equals:  false,
+		},
+		{
+			message: "Both nils",
+			error1:  nil,
+			error2:  nil,
+			equals:  true,
+		},
+		{
+			message: "Comparing annotated (1-6)",
+			error1:  level1,
+			error2:  annotated6,
+			equals:  true,
+		},
+		{
+			message: "Comparing annotated (1-7)",
+			error1:  level1,
+			error2:  annotated7,
+			equals:  true,
+		},
+		{
+			message: "Comparing annotated (6-7)",
+			error1:  annotated6,
+			error2:  annotated7,
+			equals:  true,
+		},
+		{
+			message: "Comparing annotated with different",
+			error1:  annotated6,
+			error2:  separate,
+			equals:  false,
+		},
+	} {
+		c.Logf("Test case %d: %s | %v == %v => %v", i, test.message, test.error1, test.error2, test.equals)
+		c.Assert(errors.CauseEquals(test.error1, test.error2), gc.Equals, test.equals)
+		c.Assert(errors.CauseEquals(test.error2, test.error1), gc.Equals, test.equals)
+	}
+}
