@@ -2,9 +2,7 @@
 // Licensed under the LGPLv3, see LICENCE file for details.
 
 /*
-[godoc-link-here]
-
-The juju/errors provides an easy way to annotate errors without losing the
+Package errors provides an easy way to annotate errors without losing the
 orginal error context.
 
 The exported `New` and `Errorf` functions are designed to replace the
