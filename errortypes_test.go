@@ -27,6 +27,7 @@ type errorInfo struct {
 // allErrors holds information for all defined errors. When adding new
 // errors, add them here as well to include them in tests.
 var allErrors = []*errorInfo{
+	{errors.IsTimeout, errors.Timeoutf, errors.NewTimeout, " timeout"},
 	{errors.IsNotFound, errors.NotFoundf, errors.NewNotFound, " not found"},
 	{errors.IsUserNotFound, errors.UserNotFoundf, errors.NewUserNotFound, " user not found"},
 	{errors.IsUnauthorized, errors.Unauthorizedf, errors.NewUnauthorized, ""},
