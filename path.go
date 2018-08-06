@@ -4,7 +4,10 @@
 package errors
 
 import (
-	"runtime"
+	"fmt"
+	"go/build"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -14,25 +17,21 @@ var prefixSize int
 
 // goPath is the deduced path based on the location of this file as compiled.
 var goPath string
+var srcDir string
 
 func init() {
-	_, file, _, ok := runtime.Caller(0)
-	if file == "?" {
-		return
+	goPath = getGOPATH()
+	srcDir = filepath.Join(goPath, "src")
+}
+
+func getGOPATH() string {
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
 	}
-	if ok {
-		// We know that the end of the file should be:
-		// github.com/juju/errors/path.go
-		size := len(file)
-		suffix := len("github.com/juju/errors/path.go")
-		goPath = file[:size-suffix]
-		prefixSize = len(goPath)
-	}
+	return gopath
 }
 
 func trimGoPath(filename string) string {
-	if strings.HasPrefix(filename, goPath) {
-		return filename[prefixSize:]
-	}
-	return filename
+	return strings.Replace(filename, fmt.Sprintf("%s/", srcDir), "", 1)
 }

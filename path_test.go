@@ -21,7 +21,7 @@ func (*pathSuite) TestGoPathSet(c *gc.C) {
 
 func (*pathSuite) TestTrimGoPath(c *gc.C) {
 	relativeImport := "github.com/foo/bar/baz.go"
-	filename := path.Join(errors.GoPath(), relativeImport)
+	filename := path.Join(errors.GoPath(), "src", relativeImport)
 	c.Assert(errors.TrimGoPath(filename), gc.Equals, relativeImport)
 
 	absoluteImport := "/usr/share/foo/bar/baz.go"
