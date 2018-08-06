@@ -11,27 +11,9 @@ import (
 	"strings"
 )
 
-// prefixSize is used internally to trim the user specific path from the
-// front of the returned filenames from the runtime call stack.
-var prefixSize int
-
-// goPath is the deduced path based on the location of this file as compiled.
-var goPath string
-var srcDir string
-
-func init() {
-	goPath = getGOPATH()
-	srcDir = filepath.Join(goPath, "src")
-}
-
-func getGOPATH() string {
-	gopath := os.Getenv("GOPATH")
-	if gopath == "" {
-		gopath = build.Default.GOPATH
-	}
-	return gopath
-}
+var goPath = build.Default.GOPATH
+var srcDir = filepath.Join(goPath, "src")
 
 func trimGoPath(filename string) string {
-	return strings.Replace(filename, fmt.Sprintf("%s/", srcDir), "", 1)
+	return strings.TrimPrefix(filename, fmt.Sprintf("%s%s", srcDir, string(os.PathSeparator)))
 }
