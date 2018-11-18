@@ -198,95 +198,93 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 		generator func() error
 		expected  string
 		tracer    bool
-	}{
-		{
-			message: "nil",
-			generator: func() error {
-				return nil
-			},
-		}, {
-			message: "raw error",
-			generator: func() error {
-				return fmt.Errorf("raw")
-			},
-			expected: "raw",
-		}, {
-			message: "single error stack",
-			generator: func() error {
-				return errors.New("first error") //err single
-			},
-			expected: "$single$: first error",
-			tracer:   true,
-		}, {
-			message: "annotated error",
-			generator: func() error {
-				err := errors.New("first error")          //err annotated-0
-				return errors.Annotate(err, "annotation") //err annotated-1
-			},
-			expected: "" +
-				"$annotated-0$: first error\n" +
-				"$annotated-1$: annotation",
-			tracer: true,
-		}, {
-			message: "wrapped error",
-			generator: func() error {
-				err := errors.New("first error")                    //err wrapped-0
-				return errors.Wrap(err, newError("detailed error")) //err wrapped-1
-			},
-			expected: "" +
-				"$wrapped-0$: first error\n" +
-				"$wrapped-1$: detailed error",
-			tracer: true,
-		}, {
-			message: "annotated wrapped error",
-			generator: func() error {
-				err := errors.Errorf("first error")                  //err ann-wrap-0
-				err = errors.Wrap(err, fmt.Errorf("detailed error")) //err ann-wrap-1
-				return errors.Annotatef(err, "annotated")            //err ann-wrap-2
-			},
-			expected: "" +
-				"$ann-wrap-0$: first error\n" +
-				"$ann-wrap-1$: detailed error\n" +
-				"$ann-wrap-2$: annotated",
-			tracer: true,
-		}, {
-			message: "traced, and annotated",
-			generator: func() error {
-				err := errors.New("first error")           //err stack-0
-				err = errors.Trace(err)                    //err stack-1
-				err = errors.Annotate(err, "some context") //err stack-2
-				err = errors.Trace(err)                    //err stack-3
-				err = errors.Annotate(err, "more context") //err stack-4
-				return errors.Trace(err)                   //err stack-5
-			},
-			expected: "" +
-				"$stack-0$: first error\n" +
-				"$stack-1$: \n" +
-				"$stack-2$: some context\n" +
-				"$stack-3$: \n" +
-				"$stack-4$: more context\n" +
-				"$stack-5$: ",
-			tracer: true,
-		}, {
-			message: "uncomparable, wrapped with a value error",
-			generator: func() error {
-				err := newNonComparableError("first error")     //err mixed-0
-				err = errors.Trace(err)                         //err mixed-1
-				err = errors.Wrap(err, newError("value error")) //err mixed-2
-				err = errors.Maskf(err, "masked")               //err mixed-3
-				err = errors.Annotate(err, "more context")      //err mixed-4
-				return errors.Trace(err)                        //err mixed-5
-			},
-			expected: "" +
-				"first error\n" +
-				"$mixed-1$: \n" +
-				"$mixed-2$: value error\n" +
-				"$mixed-3$: masked\n" +
-				"$mixed-4$: more context\n" +
-				"$mixed-5$: ",
-			tracer: true,
+	}{{
+		message: "nil",
+		generator: func() error {
+			return nil
 		},
-	} {
+	}, {
+		message: "raw error",
+		generator: func() error {
+			return fmt.Errorf("raw")
+		},
+		expected: "raw",
+	}, {
+		message: "single error stack",
+		generator: func() error {
+			return errors.New("first error") //err single
+		},
+		expected: "$single$: first error",
+		tracer:   true,
+	}, {
+		message: "annotated error",
+		generator: func() error {
+			err := errors.New("first error")          //err annotated-0
+			return errors.Annotate(err, "annotation") //err annotated-1
+		},
+		expected: "" +
+			"$annotated-0$: first error\n" +
+			"$annotated-1$: annotation",
+		tracer: true,
+	}, {
+		message: "wrapped error",
+		generator: func() error {
+			err := errors.New("first error")                    //err wrapped-0
+			return errors.Wrap(err, newError("detailed error")) //err wrapped-1
+		},
+		expected: "" +
+			"$wrapped-0$: first error\n" +
+			"$wrapped-1$: detailed error",
+		tracer: true,
+	}, {
+		message: "annotated wrapped error",
+		generator: func() error {
+			err := errors.Errorf("first error")                  //err ann-wrap-0
+			err = errors.Wrap(err, fmt.Errorf("detailed error")) //err ann-wrap-1
+			return errors.Annotatef(err, "annotated")            //err ann-wrap-2
+		},
+		expected: "" +
+			"$ann-wrap-0$: first error\n" +
+			"$ann-wrap-1$: detailed error\n" +
+			"$ann-wrap-2$: annotated",
+		tracer: true,
+	}, {
+		message: "traced, and annotated",
+		generator: func() error {
+			err := errors.New("first error")           //err stack-0
+			err = errors.Trace(err)                    //err stack-1
+			err = errors.Annotate(err, "some context") //err stack-2
+			err = errors.Trace(err)                    //err stack-3
+			err = errors.Annotate(err, "more context") //err stack-4
+			return errors.Trace(err)                   //err stack-5
+		},
+		expected: "" +
+			"$stack-0$: first error\n" +
+			"$stack-1$: \n" +
+			"$stack-2$: some context\n" +
+			"$stack-3$: \n" +
+			"$stack-4$: more context\n" +
+			"$stack-5$: ",
+		tracer: true,
+	}, {
+		message: "uncomparable, wrapped with a value error",
+		generator: func() error {
+			err := newNonComparableError("first error")     //err mixed-0
+			err = errors.Trace(err)                         //err mixed-1
+			err = errors.Wrap(err, newError("value error")) //err mixed-2
+			err = errors.Maskf(err, "masked")               //err mixed-3
+			err = errors.Annotate(err, "more context")      //err mixed-4
+			return errors.Trace(err)                        //err mixed-5
+		},
+		expected: "" +
+			"first error\n" +
+			"$mixed-1$: \n" +
+			"$mixed-2$: value error\n" +
+			"$mixed-3$: masked\n" +
+			"$mixed-4$: more context\n" +
+			"$mixed-5$: ",
+		tracer: true,
+	}} {
 		c.Logf("%v: %s", i, test.message)
 		err := test.generator()
 		expected := replaceLocations(test.expected)
@@ -301,5 +299,36 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 			stackTrace := tracer.StackTrace()
 			c.Check(stackTrace, gc.DeepEquals, strings.Split(stack, "\n"))
 		}
+	}
+}
+
+func (*functionSuite) TestFormat(c *gc.C) {
+	err := errors.New("TestFormat") //err testformat
+	err = errors.Mask(err)          //err testformat-wrap
+	for i, test := range []struct {
+		format string
+		expect string
+	}{{
+		format: "%s",
+		expect: "TestFormat",
+	}, {
+		format: "%v",
+		expect: "TestFormat",
+	}, {
+		format: "%q",
+		expect: `"TestFormat"`,
+	}, {
+		format: "%A",
+		expect: `%!A(*errors.Err=TestFormat)`,
+	}, {
+		format: "%+v",
+		expect: "" +
+			"$testformat$: TestFormat\n" +
+			"$testformat-wrap$: ",
+	}} {
+		c.Logf("test %d: %q", i, test.format)
+		s := fmt.Sprintf(test.format, err)
+		expect := replaceLocations(test.expect)
+		c.Check(s, gc.Equals, expect)
 	}
 }
