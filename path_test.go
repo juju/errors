@@ -15,15 +15,24 @@ type pathSuite struct{}
 
 var _ = gc.Suite(&pathSuite{})
 
-func (*pathSuite) TestGoPathSet(c *gc.C) {
-	c.Assert(errors.GoPath(), gc.Not(gc.Equals), "")
+func (*pathSuite) TestTrimDefaultSet(c *gc.C) {
+	c.Assert(errors.TrimDefault(), gc.Not(gc.Equals), "")
 }
 
-func (*pathSuite) TestTrimGoPath(c *gc.C) {
-	relativeImport := "github.com/foo/bar/baz.go"
-	filename := filepath.Join(errors.GoPath(), "src", relativeImport)
-	c.Assert(errors.TrimGoPath(filename), gc.Equals, relativeImport)
+func (*pathSuite) TestTrimSourcePath(c *gc.C) {
+	relativeImport := "github.com/foo/bar/rel.go"
+	filename := filepath.Join(errors.TrimDefault(), relativeImport)
+	c.Assert(errors.TrimSourcePath(filename), gc.Equals, relativeImport)
 
-	absoluteImport := "/usr/share/foo/bar/baz.go"
-	c.Assert(errors.TrimGoPath(absoluteImport), gc.Equals, absoluteImport)
+	absoluteImport := "/usr/share/foo/bar/abs.go"
+	c.Assert(errors.TrimSourcePath(absoluteImport), gc.Equals, absoluteImport)
+}
+
+func (*pathSuite) TestSetSourceTrimPrefix(c *gc.C) {
+	testPrefix := "/usr/share/"
+	savePrefix := errors.SetSourceTrimPrefix(testPrefix)
+	defer errors.SetSourceTrimPrefix(savePrefix)
+	relative := "github.com/foo/bar/rel.go"
+	filename := filepath.Join(testPrefix, relative)
+	c.Assert(errors.TrimSourcePath(filename), gc.Equals, relative)
 }
