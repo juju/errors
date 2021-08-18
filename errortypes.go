@@ -355,3 +355,28 @@ func IsQuotaLimitExceeded(err error) bool {
 	_, ok := err.(*quotaLimitExceeded)
 	return ok
 }
+
+// notYetAvailable is the error returned when a resource is not yet available
+// but it might be in the future.
+type notYetAvailable struct {
+	Err
+}
+
+// IsNotYetAvailable reports err was created with NotYetAvailableF or
+// NewNotYetAvailable.
+func IsNotYetAvailable(err error) bool {
+	err = Cause(err)
+	_, ok := err.(*notYetAvailable)
+	return ok
+}
+
+// NotYetAvailablef returns an error which satisfies IsNotYetAvailable.
+func NotYetAvailablef(format string, args ...interface{}) error {
+	return &notYetAvailable{wrap(nil, format, "", args...)}
+}
+
+// NewNotYetAvailable returns an error which wraps err and satisfies
+// IsNotYetAvailable.
+func NewNotYetAvailable(err error, msg string) error {
+	return &notYetAvailable{wrap(err, msg, "")}
+}
