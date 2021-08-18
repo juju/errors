@@ -41,6 +41,7 @@ var allErrors = []*errorInfo{
 	{errors.IsBadRequest, errors.BadRequestf, errors.NewBadRequest, ""},
 	{errors.IsForbidden, errors.Forbiddenf, errors.NewForbidden, ""},
 	{errors.IsQuotaLimitExceeded, errors.QuotaLimitExceededf, errors.NewQuotaLimitExceeded, ""},
+	{errors.IsNotYetAvailable, errors.NotYetAvailablef, errors.NewNotYetAvailable, ""},
 }
 
 type errorTypeSuite struct{}
