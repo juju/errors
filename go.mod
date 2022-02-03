@@ -1,11 +1,16 @@
 module github.com/juju/errors
 
-go 1.15
+go 1.17
 
 require (
-	github.com/juju/loggo v0.0.0-20170605014607-8232ab8918d9 // indirect
-	github.com/juju/testing v0.0.0-20180517134105-72703b1e95eb
-	gopkg.in/check.v1 v1.0.0-20160105164936-4f90aeace3a2
-	gopkg.in/mgo.v2 v2.0.0-20160818015218-f2b6f6c918c4 // indirect
-	gopkg.in/yaml.v2 v2.0.0-20170712054546-1be3d31502d6 // indirect
+	github.com/juju/testing v0.0.0-20220202055744-1ad0816210a6
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
+)
+
+require (
+	github.com/juju/loggo v0.0.0-20200526014432-9ce3a2e09b5e // indirect
+	github.com/juju/mgo/v2 v2.0.0-20210302023703-70d5d206e208 // indirect
+	github.com/kr/pretty v0.2.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
