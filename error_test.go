@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"runtime"
 
-	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
 
 	"github.com/juju/errors"
@@ -125,7 +124,7 @@ func (*errorsSuite) TestNewErr(c *gc.C) {
 	err := newEmbed("testing %d", 42) //err embedErr
 	c.Assert(err.Error(), gc.Equals, "testing 42")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["embedErr"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["embedErr"].String())
 }
 
 func newEmbedWithCause(other error, format string, args ...interface{}) *embed {
@@ -142,7 +141,7 @@ func (*errorsSuite) TestNewErrWithCause(c *gc.C) {
 	err := newEmbedWithCause(causeErr, "testing %d", 43) //err embedCause
 	c.Assert(err.Error(), gc.Equals, "testing 43: external error")
 	c.Assert(errors.Cause(err), gc.Equals, causeErr)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["embedCause"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["embedCause"].String())
 }
 
 var _ error = (*embed)(nil)

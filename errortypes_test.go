@@ -10,7 +10,6 @@ import (
 	"runtime"
 
 	"github.com/juju/errors"
-	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
 )
 
@@ -75,14 +74,14 @@ func deferredAnnotatef(err error, format string, args ...interface{}) error {
 func mustSatisfy(c *gc.C, err error, errInfo *errorInfo) {
 	if errInfo != nil {
 		msg := fmt.Sprintf("%#v must satisfy %v", err, errInfo.satisfierName())
-		c.Check(err, jc.Satisfies, errInfo.satisfier, gc.Commentf(msg))
+		c.Check(err, Satisfies, errInfo.satisfier, gc.Commentf(msg))
 	}
 }
 
 func mustNotSatisfy(c *gc.C, err error, errInfo *errorInfo) {
 	if errInfo != nil {
 		msg := fmt.Sprintf("%#v must not satisfy %v", err, errInfo.satisfierName())
-		c.Check(err, gc.Not(jc.Satisfies), errInfo.satisfier, gc.Commentf(msg))
+		c.Check(err, gc.Not(Satisfies), errInfo.satisfier, gc.Commentf(msg))
 	}
 }
 
