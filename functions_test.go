@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strings"
 
-	jc "github.com/juju/testing/checkers"
 	gc "gopkg.in/check.v1"
 
 	"github.com/juju/errors"
@@ -25,14 +24,14 @@ func (*functionSuite) TestNew(c *gc.C) {
 	err := errors.New("testing") //err newTest
 	c.Assert(err.Error(), gc.Equals, "testing")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["newTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["newTest"].String())
 }
 
 func (*functionSuite) TestErrorf(c *gc.C) {
 	err := errors.Errorf("testing %d", 42) //err errorfTest
 	c.Assert(err.Error(), gc.Equals, "testing 42")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["errorfTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["errorfTest"].String())
 }
 
 func (*functionSuite) TestTrace(c *gc.C) {
@@ -40,7 +39,7 @@ func (*functionSuite) TestTrace(c *gc.C) {
 	err := errors.Trace(first) //err traceTest
 	c.Assert(err.Error(), gc.Equals, "first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["traceTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["traceTest"].String())
 
 	c.Assert(errors.Trace(nil), gc.IsNil)
 }
@@ -50,7 +49,7 @@ func (*functionSuite) TestAnnotate(c *gc.C) {
 	err := errors.Annotate(first, "annotation") //err annotateTest
 	c.Assert(err.Error(), gc.Equals, "annotation: first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["annotateTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["annotateTest"].String())
 
 	c.Assert(errors.Annotate(nil, "annotate"), gc.IsNil)
 }
@@ -60,7 +59,7 @@ func (*functionSuite) TestAnnotatef(c *gc.C) {
 	err := errors.Annotatef(first, "annotation %d", 2) //err annotatefTest
 	c.Assert(err.Error(), gc.Equals, "annotation 2: first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["annotatefTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["annotatefTest"].String())
 
 	c.Assert(errors.Annotatef(nil, "annotate"), gc.IsNil)
 }
@@ -78,7 +77,7 @@ func (*functionSuite) TestDeferredAnnotatef(c *gc.C) {
 	err := test()
 	c.Assert(err.Error(), gc.Equals, "deferred annotate: first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["deferredAnnotate"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["deferredAnnotate"].String())
 
 	err = nil
 	errors.DeferredAnnotatef(&err, "deferred %s", "annotate")
@@ -91,8 +90,8 @@ func (*functionSuite) TestWrap(c *gc.C) {
 	err := errors.Wrap(first, detailed) //err wrapTest
 	c.Assert(err.Error(), gc.Equals, "detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["wrapFirst"].String())
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["wrapTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["wrapFirst"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["wrapTest"].String())
 }
 
 func (*functionSuite) TestWrapOfNil(c *gc.C) {
@@ -100,7 +99,7 @@ func (*functionSuite) TestWrapOfNil(c *gc.C) {
 	err := errors.Wrap(nil, detailed) //err nilWrapTest
 	c.Assert(err.Error(), gc.Equals, "detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["nilWrapTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["nilWrapTest"].String())
 }
 
 func (*functionSuite) TestWrapf(c *gc.C) {
@@ -109,8 +108,8 @@ func (*functionSuite) TestWrapf(c *gc.C) {
 	err := errors.Wrapf(first, detailed, "value %d", 42) //err wrapfTest
 	c.Assert(err.Error(), gc.Equals, "value 42: detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["wrapfFirst"].String())
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["wrapfTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["wrapfFirst"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["wrapfTest"].String())
 }
 
 func (*functionSuite) TestWrapfOfNil(c *gc.C) {
@@ -118,7 +117,7 @@ func (*functionSuite) TestWrapfOfNil(c *gc.C) {
 	err := errors.Wrapf(nil, detailed, "value %d", 42) //err nilWrapfTest
 	c.Assert(err.Error(), gc.Equals, "value 42: detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["nilWrapfTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["nilWrapfTest"].String())
 }
 
 func (*functionSuite) TestMask(c *gc.C) {
@@ -126,7 +125,7 @@ func (*functionSuite) TestMask(c *gc.C) {
 	err := errors.Mask(first) //err maskTest
 	c.Assert(err.Error(), gc.Equals, "first")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["maskTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["maskTest"].String())
 
 	c.Assert(errors.Mask(nil), gc.IsNil)
 }
@@ -136,7 +135,7 @@ func (*functionSuite) TestMaskf(c *gc.C) {
 	err := errors.Maskf(first, "masked %d", 42) //err maskfTest
 	c.Assert(err.Error(), gc.Equals, "masked 42: first")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), jc.Contains, tagToLocation["maskfTest"].String())
+	c.Assert(errors.Details(err), Contains, tagToLocation["maskfTest"].String())
 
 	c.Assert(errors.Maskf(nil, "mask"), gc.IsNil)
 }
@@ -160,13 +159,13 @@ func (*functionSuite) TestCause(c *gc.C) {
 	// Look for a file that we know isn't there.
 	dir := c.MkDir()
 	_, err = os.Stat(filepath.Join(dir, "not-there"))
-	c.Assert(os.IsNotExist(err), jc.IsTrue)
+	c.Assert(os.IsNotExist(err), gc.Equals, true)
 
 	err = errors.Annotatef(err, "wrap it")
 	// Now the error itself isn't a 'IsNotExist'.
-	c.Assert(os.IsNotExist(err), jc.IsFalse)
+	c.Assert(os.IsNotExist(err), gc.Equals, false)
 	// However if we use the Check method, it is.
-	c.Assert(os.IsNotExist(errors.Cause(err)), jc.IsTrue)
+	c.Assert(os.IsNotExist(errors.Cause(err)), gc.Equals, true)
 }
 
 func (s *functionSuite) TestDetails(c *gc.C) {
