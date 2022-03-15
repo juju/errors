@@ -90,8 +90,8 @@ func (e *Err) Underlying() error {
 	return e.previous
 }
 
-// Unwrap is a synonym for Underlying, provided only to match the functionality
-// of Go's standard `errors` library.
+// Unwrap is a synonym for Underlying, which allows Err to be used with the
+// Unwrap, Is and As functions in Go's standard `errors` library.
 func (e *Err) Unwrap() error {
 	return e.previous
 }
