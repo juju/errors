@@ -328,3 +328,23 @@ func errorStack(err error) []string {
 	}
 	return result
 }
+
+// Unwrap returns the previous error in the stack. It calls the Unwrap method
+// on its argument if possible, and otherwise returns nil.
+//
+// This method is provided to match the functionality of Go's `errors` library
+// (pkg.go.dev/errors). In most cases, the error's *cause* will be more
+// relevant, so you should use the `Cause` method instead.
+func Unwrap(err error) error {
+	u, hasUnwrap := err.(unwrappable)
+
+	if hasUnwrap {
+		return u.Unwrap()
+	} else {
+		return nil
+	}
+}
+
+type unwrappable interface {
+	Unwrap() error
+}

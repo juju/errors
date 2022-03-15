@@ -90,6 +90,12 @@ func (e *Err) Underlying() error {
 	return e.previous
 }
 
+// Unwrap is a synonym for Underlying, provided only to match the functionality
+// of Go's standard `errors` library.
+func (e *Err) Unwrap() error {
+	return e.previous
+}
+
 // Cause returns the most recent error in the error stack that
 // meets one of these criteria: the original error that was raised; the new
 // error that was passed into the Wrap function; the most recently masked
