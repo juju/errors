@@ -90,12 +90,6 @@ func (e *Err) Underlying() error {
 	return e.previous
 }
 
-// Unwrap is a synonym for Underlying, which allows Err to be used with the
-// Unwrap, Is and As functions in Go's standard `errors` library.
-func (e *Err) Unwrap() error {
-	return e.previous
-}
-
 // Cause returns the most recent error in the error stack that
 // meets one of these criteria: the original error that was raised; the new
 // error that was passed into the Wrap function; the most recently masked
@@ -179,4 +173,10 @@ func (e *Err) StackTrace() []string {
 // Ideally we'd have a way to check identity, but deep equals will do.
 func sameError(e1, e2 error) bool {
 	return reflect.DeepEqual(e1, e2)
+}
+
+// Unwrap is a synonym for Underlying, which allows Err to be used with the
+// Unwrap, Is and As functions in Go's standard `errors` library.
+func (e *Err) Unwrap() error {
+	return e.previous
 }

@@ -4,7 +4,7 @@
 package errors
 
 import (
-	goerrors "errors"
+	stderrors "errors"
 	"fmt"
 	"strings"
 )
@@ -330,6 +330,16 @@ func errorStack(err error) []string {
 	return result
 }
 
-// Unwrap is an alias for the Unwrap function in Go's standard `errors` library
-// (pkg.go.dev/errors).
-var Unwrap = goerrors.Unwrap
+// Unwrap, Is and As are proxies for the corresponding functions in Go's
+// standard `errors` library (pkg.go.dev/errors).
+func Unwrap(err error) error {
+	return stderrors.Unwrap(err)
+}
+
+func Is(err, target error) bool {
+	return stderrors.Is(err, target)
+}
+
+func As(err error, target interface{}) bool {
+	return stderrors.As(err, target)
+}
