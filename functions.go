@@ -290,7 +290,6 @@ func errorStack(err error) []string {
 		if err, ok := err.(locationer); ok {
 			file, line := err.Location()
 			// Strip off the leading GOPATH/src path elements.
-			file = trimSourcePath(file)
 			if file != "" {
 				buff = append(buff, fmt.Sprintf("%s:%d", file, line)...)
 				buff = append(buff, ": "...)
