@@ -96,6 +96,38 @@ func (*errorsSuite) TestErrorString(c *gc.C) {
 				return errors.Trace(err)
 			},
 			expected: "more context: masked: some context: first error",
+		}, {
+			message: "error traced then unwrapped",
+			generator: func() error {
+				err := errors.New("inner error")
+				err = errors.Trace(err)
+				return errors.Unwrap(err)
+			},
+			expected: "inner error",
+		}, {
+			message: "error annotated then unwrapped",
+			generator: func() error {
+				err := errors.New("inner error")
+				err = errors.Annotate(err, "annotation")
+				return errors.Unwrap(err)
+			},
+			expected: "inner error",
+		}, {
+			message: "error wrapped then unwrapped",
+			generator: func() error {
+				err := errors.New("inner error")
+				err = errors.Wrap(err, errors.New("cause"))
+				return errors.Unwrap(err)
+			},
+			expected: "inner error",
+		}, {
+			message: "error masked then unwrapped",
+			generator: func() error {
+				err := errors.New("inner error")
+				err = errors.Mask(err)
+				return errors.Unwrap(err)
+			},
+			expected: "inner error",
 		},
 	} {
 		c.Logf("%v: %s", i, test.message)
@@ -142,6 +174,11 @@ func (*errorsSuite) TestNewErrWithCause(c *gc.C) {
 	c.Assert(err.Error(), gc.Equals, "testing 43: external error")
 	c.Assert(errors.Cause(err), gc.Equals, causeErr)
 	c.Assert(errors.Details(err), Contains, tagToLocation["embedCause"].String())
+}
+
+func (*errorsSuite) TestUnwrapNewErrGivesNil(c *gc.C) {
+	err := errors.New("test error")
+	c.Assert(errors.Unwrap(err), gc.IsNil)
 }
 
 var _ error = (*embed)(nil)
