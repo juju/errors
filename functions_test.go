@@ -331,3 +331,43 @@ func (*functionSuite) TestFormat(c *gc.C) {
 		c.Check(s, gc.Equals, expect)
 	}
 }
+
+type basicError struct {
+	Reason string
+}
+
+func (b *basicError) Error() string {
+	return b.Reason
+}
+
+func (*functionSuite) TestAs(c *gc.C) {
+	baseError := &basicError{"I'm an error"}
+	testErrors := []error{
+		errors.Trace(baseError),
+		errors.Annotate(baseError, "annotation"),
+		errors.Wrap(baseError, errors.New("wrapper")),
+		errors.Mask(baseError),
+	}
+
+	for _, err := range testErrors {
+		bError := &basicError{}
+		val := errors.As(err, &bError)
+		c.Check(val, gc.Equals, true)
+		c.Check(bError.Reason, gc.Equals, "I'm an error")
+	}
+}
+
+func (*functionSuite) TestIs(c *gc.C) {
+	baseError := &basicError{"I'm an error"}
+	testErrors := []error{
+		errors.Trace(baseError),
+		errors.Annotate(baseError, "annotation"),
+		errors.Wrap(baseError, errors.New("wrapper")),
+		errors.Mask(baseError),
+	}
+
+	for _, err := range testErrors {
+		val := errors.Is(err, baseError)
+		c.Check(val, gc.Equals, true)
+	}
+}
