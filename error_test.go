@@ -178,7 +178,7 @@ func (*errorsSuite) TestNewErrWithCause(c *gc.C) {
 
 func (*errorsSuite) TestUnwrapNewErrGivesNil(c *gc.C) {
 	err := errors.New("test error")
-	c.Assert(errors.Unwrap(err), gc.Equals, nil)
+	c.Assert(errors.Unwrap(err), gc.IsNil)
 }
 
 var _ error = (*embed)(nil)
