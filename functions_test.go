@@ -5,6 +5,7 @@ package errors_test
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -21,35 +22,43 @@ type functionSuite struct {
 var _ = gc.Suite(&functionSuite{})
 
 func (*functionSuite) TestNew(c *gc.C) {
-	err := errors.New("testing") //err newTest
+	err := errors.New("testing")
+	loc := errorLocationValue(c)
+
 	c.Assert(err.Error(), gc.Equals, "testing")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), Contains, tagToLocation["newTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 }
 
 func (*functionSuite) TestErrorf(c *gc.C) {
-	err := errors.Errorf("testing %d", 42) //err errorfTest
+	err := errors.Errorf("testing %d", 42)
+	loc := errorLocationValue(c)
+
 	c.Assert(err.Error(), gc.Equals, "testing 42")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), Contains, tagToLocation["errorfTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 }
 
 func (*functionSuite) TestTrace(c *gc.C) {
 	first := errors.New("first")
-	err := errors.Trace(first) //err traceTest
+	err := errors.Trace(first)
+	loc := errorLocationValue(c)
+
 	c.Assert(err.Error(), gc.Equals, "first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), Contains, tagToLocation["traceTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 
 	c.Assert(errors.Trace(nil), gc.IsNil)
 }
 
 func (*functionSuite) TestAnnotate(c *gc.C) {
 	first := errors.New("first")
-	err := errors.Annotate(first, "annotation") //err annotateTest
+	err := errors.Annotate(first, "annotation")
+	loc := errorLocationValue(c)
+
 	c.Assert(err.Error(), gc.Equals, "annotation: first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), Contains, tagToLocation["annotateTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 
 	c.Assert(errors.Annotate(nil, "annotate"), gc.IsNil)
 }
@@ -57,9 +66,11 @@ func (*functionSuite) TestAnnotate(c *gc.C) {
 func (*functionSuite) TestAnnotatef(c *gc.C) {
 	first := errors.New("first")
 	err := errors.Annotatef(first, "annotation %d", 2) //err annotatefTest
+	loc := errorLocationValue(c)
+
 	c.Assert(err.Error(), gc.Equals, "annotation 2: first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), Contains, tagToLocation["annotatefTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 
 	c.Assert(errors.Annotatef(nil, "annotate"), gc.IsNil)
 }
@@ -72,12 +83,11 @@ func (*functionSuite) TestDeferredAnnotatef(c *gc.C) {
 	first := errors.New("first")
 	test := func() (err error) {
 		defer errors.DeferredAnnotatef(&err, "deferred %s", "annotate")
-		return first //err deferredAnnotate
+		return first
 	}
 	err := test()
 	c.Assert(err.Error(), gc.Equals, "deferred annotate: first")
 	c.Assert(errors.Cause(err), gc.Equals, first)
-	c.Assert(errors.Details(err), Contains, tagToLocation["deferredAnnotate"].String())
 
 	err = nil
 	errors.DeferredAnnotatef(&err, "deferred %s", "annotate")
@@ -85,57 +95,67 @@ func (*functionSuite) TestDeferredAnnotatef(c *gc.C) {
 }
 
 func (*functionSuite) TestWrap(c *gc.C) {
-	first := errors.New("first") //err wrapFirst
+	first := errors.New("first")
+	firstLoc := errorLocationValue(c)
+
 	detailed := errors.New("detailed")
-	err := errors.Wrap(first, detailed) //err wrapTest
+	err := errors.Wrap(first, detailed)
+	secondLoc := errorLocationValue(c)
+
 	c.Assert(err.Error(), gc.Equals, "detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), Contains, tagToLocation["wrapFirst"].String())
-	c.Assert(errors.Details(err), Contains, tagToLocation["wrapTest"].String())
+	c.Assert(errors.Details(err), Contains, firstLoc)
+	c.Assert(errors.Details(err), Contains, secondLoc)
 }
 
 func (*functionSuite) TestWrapOfNil(c *gc.C) {
 	detailed := errors.New("detailed")
-	err := errors.Wrap(nil, detailed) //err nilWrapTest
+	err := errors.Wrap(nil, detailed)
+	loc := errorLocationValue(c)
 	c.Assert(err.Error(), gc.Equals, "detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), Contains, tagToLocation["nilWrapTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 }
 
 func (*functionSuite) TestWrapf(c *gc.C) {
-	first := errors.New("first") //err wrapfFirst
+	first := errors.New("first")
+	firstLoc := errorLocationValue(c)
 	detailed := errors.New("detailed")
-	err := errors.Wrapf(first, detailed, "value %d", 42) //err wrapfTest
+	err := errors.Wrapf(first, detailed, "value %d", 42)
+	secondLoc := errorLocationValue(c)
 	c.Assert(err.Error(), gc.Equals, "value 42: detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), Contains, tagToLocation["wrapfFirst"].String())
-	c.Assert(errors.Details(err), Contains, tagToLocation["wrapfTest"].String())
+	c.Assert(errors.Details(err), Contains, firstLoc)
+	c.Assert(errors.Details(err), Contains, secondLoc)
 }
 
 func (*functionSuite) TestWrapfOfNil(c *gc.C) {
 	detailed := errors.New("detailed")
-	err := errors.Wrapf(nil, detailed, "value %d", 42) //err nilWrapfTest
+	err := errors.Wrapf(nil, detailed, "value %d", 42)
+	loc := errorLocationValue(c)
 	c.Assert(err.Error(), gc.Equals, "value 42: detailed")
 	c.Assert(errors.Cause(err), gc.Equals, detailed)
-	c.Assert(errors.Details(err), Contains, tagToLocation["nilWrapfTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 }
 
 func (*functionSuite) TestMask(c *gc.C) {
 	first := errors.New("first")
-	err := errors.Mask(first) //err maskTest
+	err := errors.Mask(first)
+	loc := errorLocationValue(c)
 	c.Assert(err.Error(), gc.Equals, "first")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), Contains, tagToLocation["maskTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 
 	c.Assert(errors.Mask(nil), gc.IsNil)
 }
 
 func (*functionSuite) TestMaskf(c *gc.C) {
 	first := errors.New("first")
-	err := errors.Maskf(first, "masked %d", 42) //err maskfTest
+	err := errors.Maskf(first, "masked %d", 42)
+	loc := errorLocationValue(c)
 	c.Assert(err.Error(), gc.Equals, "masked 42: first")
 	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), Contains, tagToLocation["maskfTest"].String())
+	c.Assert(errors.Details(err), Contains, loc)
 
 	c.Assert(errors.Maskf(nil, "mask"), gc.IsNil)
 }
@@ -168,25 +188,6 @@ func (*functionSuite) TestCause(c *gc.C) {
 	c.Assert(os.IsNotExist(errors.Cause(err)), gc.Equals, true)
 }
 
-func (s *functionSuite) TestDetails(c *gc.C) {
-	if runtime.Compiler == "gccgo" {
-		c.Skip("gccgo can't determine the location")
-	}
-	c.Assert(errors.Details(nil), gc.Equals, "[]")
-
-	otherErr := fmt.Errorf("other")
-	checkDetails(c, otherErr, "[{other}]")
-
-	err0 := newEmbed("foo") //err TestStack#0
-	checkDetails(c, err0, "[{$TestStack#0$: foo}]")
-
-	err1 := errors.Annotate(err0, "bar") //err TestStack#1
-	checkDetails(c, err1, "[{$TestStack#1$: bar} {$TestStack#0$: foo}]")
-
-	err2 := errors.Trace(err1) //err TestStack#2
-	checkDetails(c, err2, "[{$TestStack#2$: } {$TestStack#1$: bar} {$TestStack#0$: foo}]")
-}
-
 type tracer interface {
 	StackTrace() []string
 }
@@ -194,101 +195,101 @@ type tracer interface {
 func (*functionSuite) TestErrorStack(c *gc.C) {
 	for i, test := range []struct {
 		message   string
-		generator func() error
-		expected  string
+		generator func(*gc.C, io.Writer) error
 		tracer    bool
 	}{{
 		message: "nil",
-		generator: func() error {
+		generator: func(_ *gc.C, _ io.Writer) error {
 			return nil
 		},
 	}, {
 		message: "raw error",
-		generator: func() error {
+		generator: func(c *gc.C, expected io.Writer) error {
+			fmt.Fprint(expected, "raw")
 			return fmt.Errorf("raw")
 		},
-		expected: "raw",
 	}, {
 		message: "single error stack",
-		generator: func() error {
-			return errors.New("first error") //err single
+		generator: func(c *gc.C, expected io.Writer) error {
+			err := errors.New("first error")
+			fmt.Fprintf(expected, "%s: first error", errorLocationValue(c))
+			return err
 		},
-		expected: "$single$: first error",
-		tracer:   true,
+		tracer: true,
 	}, {
 		message: "annotated error",
-		generator: func() error {
-			err := errors.New("first error")          //err annotated-0
-			return errors.Annotate(err, "annotation") //err annotated-1
+		generator: func(c *gc.C, expected io.Writer) error {
+			err := errors.New("first error")
+			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
+			err = errors.Annotate(err, "annotation")
+			fmt.Fprintf(expected, "%s: annotation", errorLocationValue(c))
+			return err
 		},
-		expected: "" +
-			"$annotated-0$: first error\n" +
-			"$annotated-1$: annotation",
 		tracer: true,
 	}, {
 		message: "wrapped error",
-		generator: func() error {
-			err := errors.New("first error")                    //err wrapped-0
-			return errors.Wrap(err, newError("detailed error")) //err wrapped-1
+		generator: func(c *gc.C, expected io.Writer) error {
+			err := errors.New("first error")
+			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
+			err = errors.Wrap(err, newError("detailed error"))
+			fmt.Fprintf(expected, "%s: detailed error", errorLocationValue(c))
+			return err
 		},
-		expected: "" +
-			"$wrapped-0$: first error\n" +
-			"$wrapped-1$: detailed error",
 		tracer: true,
 	}, {
 		message: "annotated wrapped error",
-		generator: func() error {
-			err := errors.Errorf("first error")                  //err ann-wrap-0
-			err = errors.Wrap(err, fmt.Errorf("detailed error")) //err ann-wrap-1
-			return errors.Annotatef(err, "annotated")            //err ann-wrap-2
+		generator: func(c *gc.C, expected io.Writer) error {
+			err := errors.Errorf("first error")
+			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
+			err = errors.Wrap(err, fmt.Errorf("detailed error"))
+			fmt.Fprintf(expected, "%s: detailed error\n", errorLocationValue(c))
+			err = errors.Annotatef(err, "annotated")
+			fmt.Fprintf(expected, "%s: annotated", errorLocationValue(c))
+			return err
 		},
-		expected: "" +
-			"$ann-wrap-0$: first error\n" +
-			"$ann-wrap-1$: detailed error\n" +
-			"$ann-wrap-2$: annotated",
 		tracer: true,
 	}, {
 		message: "traced, and annotated",
-		generator: func() error {
-			err := errors.New("first error")           //err stack-0
-			err = errors.Trace(err)                    //err stack-1
-			err = errors.Annotate(err, "some context") //err stack-2
-			err = errors.Trace(err)                    //err stack-3
-			err = errors.Annotate(err, "more context") //err stack-4
-			return errors.Trace(err)                   //err stack-5
+		generator: func(c *gc.C, expected io.Writer) error {
+			err := errors.New("first error")
+			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
+			err = errors.Trace(err)
+			fmt.Fprintf(expected, "%s: \n", errorLocationValue(c))
+			err = errors.Annotate(err, "some context")
+			fmt.Fprintf(expected, "%s: some context\n", errorLocationValue(c))
+			err = errors.Trace(err)
+			fmt.Fprintf(expected, "%s: \n", errorLocationValue(c))
+			err = errors.Annotate(err, "more context")
+			fmt.Fprintf(expected, "%s: more context\n", errorLocationValue(c))
+			err = errors.Trace(err)
+			fmt.Fprintf(expected, "%s: ", errorLocationValue(c))
+			return err
 		},
-		expected: "" +
-			"$stack-0$: first error\n" +
-			"$stack-1$: \n" +
-			"$stack-2$: some context\n" +
-			"$stack-3$: \n" +
-			"$stack-4$: more context\n" +
-			"$stack-5$: ",
 		tracer: true,
 	}, {
 		message: "uncomparable, wrapped with a value error",
-		generator: func() error {
-			err := newNonComparableError("first error")     //err mixed-0
-			err = errors.Trace(err)                         //err mixed-1
-			err = errors.Wrap(err, newError("value error")) //err mixed-2
-			err = errors.Maskf(err, "masked")               //err mixed-3
-			err = errors.Annotate(err, "more context")      //err mixed-4
-			return errors.Trace(err)                        //err mixed-5
+		generator: func(c *gc.C, expected io.Writer) error {
+			err := newNonComparableError("first error")
+			fmt.Fprintln(expected, "first error")
+			err = errors.Trace(err)
+			fmt.Fprintf(expected, "%s: \n", errorLocationValue(c))
+			err = errors.Wrap(err, newError("value error"))
+			fmt.Fprintf(expected, "%s: value error\n", errorLocationValue(c))
+			err = errors.Maskf(err, "masked")
+			fmt.Fprintf(expected, "%s: masked\n", errorLocationValue(c))
+			err = errors.Annotate(err, "more context")
+			fmt.Fprintf(expected, "%s: more context\n", errorLocationValue(c))
+			err = errors.Trace(err)
+			fmt.Fprintf(expected, "%s: ", errorLocationValue(c))
+			return err
 		},
-		expected: "" +
-			"first error\n" +
-			"$mixed-1$: \n" +
-			"$mixed-2$: value error\n" +
-			"$mixed-3$: masked\n" +
-			"$mixed-4$: more context\n" +
-			"$mixed-5$: ",
 		tracer: true,
 	}} {
 		c.Logf("%v: %s", i, test.message)
-		err := test.generator()
-		expected := replaceLocations(test.expected)
+		expected := strings.Builder{}
+		err := test.generator(c, &expected)
 		stack := errors.ErrorStack(err)
-		ok := c.Check(stack, gc.Equals, expected)
+		ok := c.Check(stack, gc.Equals, expected.String())
 		if !ok {
 			c.Logf("%#v", err)
 		}
@@ -302,8 +303,12 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 }
 
 func (*functionSuite) TestFormat(c *gc.C) {
-	err := errors.New("TestFormat") //err testformat
-	err = errors.Mask(err)          //err testformat-wrap
+	formatErrorExpected := &strings.Builder{}
+	err := errors.New("TestFormat")
+	fmt.Fprintf(formatErrorExpected, "%s: TestFormat\n", errorLocationValue(c))
+	err = errors.Mask(err)
+	fmt.Fprintf(formatErrorExpected, "%s: ", errorLocationValue(c))
+
 	for i, test := range []struct {
 		format string
 		expect string
@@ -321,14 +326,11 @@ func (*functionSuite) TestFormat(c *gc.C) {
 		expect: `%!A(*errors.Err=TestFormat)`,
 	}, {
 		format: "%+v",
-		expect: "" +
-			"$testformat$: TestFormat\n" +
-			"$testformat-wrap$: ",
+		expect: formatErrorExpected.String(),
 	}} {
 		c.Logf("test %d: %q", i, test.format)
 		s := fmt.Sprintf(test.format, err)
-		expect := replaceLocations(test.expect)
-		c.Check(s, gc.Equals, expect)
+		c.Check(s, gc.Equals, test.expect)
 	}
 }
 

@@ -139,30 +139,18 @@ func (*errorsSuite) TestErrorString(c *gc.C) {
 	}
 }
 
-type embed struct {
-	errors.Err
-}
-
-func newEmbed(format string, args ...interface{}) *embed {
-	err := &embed{errors.NewErr(format, args...)}
-	err.SetLocation(1)
-	return err
-}
-
 func (*errorsSuite) TestNewErr(c *gc.C) {
 	if runtime.Compiler == "gccgo" {
 		c.Skip("gccgo can't determine the location")
 	}
-	err := newEmbed("testing %d", 42) //err embedErr
-	c.Assert(err.Error(), gc.Equals, "testing 42")
-	c.Assert(errors.Cause(err), gc.Equals, err)
-	c.Assert(errors.Details(err), Contains, tagToLocation["embedErr"].String())
-}
 
-func newEmbedWithCause(other error, format string, args ...interface{}) *embed {
-	err := &embed{errors.NewErrWithCause(other, format, args...)}
-	err.SetLocation(1)
-	return err
+	err := errors.NewErr("testing %d", 42)
+	err.SetLocation(0)
+	locLine := errorLocationValue(c)
+
+	c.Assert(err.Error(), gc.Equals, "testing 42")
+	c.Assert(errors.Cause(&err), gc.Equals, &err)
+	c.Assert(errors.Details(&err), Contains, locLine)
 }
 
 func (*errorsSuite) TestNewErrWithCause(c *gc.C) {
@@ -170,18 +158,19 @@ func (*errorsSuite) TestNewErrWithCause(c *gc.C) {
 		c.Skip("gccgo can't determine the location")
 	}
 	causeErr := fmt.Errorf("external error")
-	err := newEmbedWithCause(causeErr, "testing %d", 43) //err embedCause
+	err := errors.NewErrWithCause(causeErr, "testing %d", 43)
+	err.SetLocation(0)
+	locLine := errorLocationValue(c)
+
 	c.Assert(err.Error(), gc.Equals, "testing 43: external error")
-	c.Assert(errors.Cause(err), gc.Equals, causeErr)
-	c.Assert(errors.Details(err), Contains, tagToLocation["embedCause"].String())
+	c.Assert(errors.Cause(&err), gc.Equals, causeErr)
+	c.Assert(errors.Details(&err), Contains, locLine)
 }
 
 func (*errorsSuite) TestUnwrapNewErrGivesNil(c *gc.C) {
 	err := errors.New("test error")
 	c.Assert(errors.Unwrap(err), gc.IsNil)
 }
-
-var _ error = (*embed)(nil)
 
 // This is an uncomparable error type, as it is a struct that supports the
 // error interface (as opposed to a pointer type).

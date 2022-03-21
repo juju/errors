@@ -25,9 +25,11 @@ type Err struct {
 	// previous holds the previous error in the error stack, if any.
 	previous error
 
-	// file and line hold the source code location where the error was
-	// created.
-	file string
+	// function is the package path-qualified function name where the
+	// error was created.
+	function string
+
+	// line is the line number the error was created on inside of function
 	line int
 }
 
@@ -75,10 +77,10 @@ func NewErrWithCause(other error, format string, args ...interface{}) Err {
 	}
 }
 
-// Location is the file and line of where the error was most recently
-// created or annotated.
-func (e *Err) Location() (filename string, line int) {
-	return e.file, e.line
+// Location returns the  package path-qualified function name and line of where
+// the error was most recently created or annotated.
+func (e *Err) Location() (function string, line int) {
+	return e.function, e.line
 }
 
 // Underlying returns the previous error in the error stack, if any. A client
@@ -155,12 +157,17 @@ type unformatter Err
 
 func (unformatter) Format() { /* break the fmt.Formatter interface */ }
 
-// SetLocation records the source location of the error at callDepth stack
-// frames above the call.
+// SetLocation records the package path-qualified function name of the error at
+// callDepth stack frames above the call.
 func (e *Err) SetLocation(callDepth int) {
-	_, file, line, _ := runtime.Caller(callDepth + 1)
-	e.file = trimSourcePath(file)
-	e.line = line
+	rpc := make([]uintptr, 1)
+	n := runtime.Callers(callDepth+2, rpc[:])
+	if n < 1 {
+		return
+	}
+	frame, _ := runtime.CallersFrames(rpc).Next()
+	e.function = frame.Function
+	e.line = frame.Line
 }
 
 // StackTrace returns one string for each location recorded in the stack of
