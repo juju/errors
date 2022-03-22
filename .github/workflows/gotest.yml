@@ -1,0 +1,18 @@
+name: Run `go test`
+on: [push, pull-request, workflow_dispatch]
+jobs:
+  run-go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Get version from go.mod
+        uses: Eun/go-mod-details@v1
+        id: go-mod-details
+      - name: Install Golang
+        uses: actions/setup-go@v2
+        with:
+          # Gets go version from the previous step
+          go-version: ${{ steps.go-mod-details.outputs.go_version }}
+      - name: Run test suite
+        run: go test -v
