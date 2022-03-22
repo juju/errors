@@ -1,5 +1,5 @@
 name: Run `go test`
-on: [push, pull-request, workflow_dispatch]
+on: [push, pull_request, workflow_dispatch]
 jobs:
   run-go-test:
     runs-on: ubuntu-latest
