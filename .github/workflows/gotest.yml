@@ -1,0 +1,20 @@
+name: Run `go test`
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  run-go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+      - name: Find required go version
+        id: go-version
+        run: |
+          set -euxo pipefail
+          echo "::set-output name=version::$(grep '^go ' go.mod | awk '{print $2}')"
+      - name: Install Golang
+        uses: actions/setup-go@v2
+        with:
+          # Gets go version from the previous step
+          go-version: ${{ steps.go-version.outputs.version }}
+      - name: Run test suite
+        run: go test -v
