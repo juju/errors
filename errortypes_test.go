@@ -50,7 +50,7 @@ func (t *errorInfo) equal(t0 *errorInfo) bool {
 	if t0 == nil {
 		return false
 	}
-	return t.errType == t0.errType
+	return t == t0
 }
 
 type errorTest struct {
@@ -66,14 +66,14 @@ func deferredAnnotatef(err error, format string, args ...interface{}) error {
 
 func mustSatisfy(c *gc.C, err error, errInfo *errorInfo) {
 	if errInfo != nil {
-		msg := fmt.Sprintf("For err := %#v, Is(err, %s) should be true", err, errInfo.errName)
+		msg := fmt.Sprintf("Is(err, %s) should be TRUE when err := %#v", errInfo.errName, err)
 		c.Check(errors.Is(err, errInfo.errType), gc.Equals, true, gc.Commentf(msg))
 	}
 }
 
 func mustNotSatisfy(c *gc.C, err error, errInfo *errorInfo) {
 	if errInfo != nil {
-		msg := fmt.Sprintf("For err := %#v, Is(err, %s) should be true", err, errInfo.errName)
+		msg := fmt.Sprintf("Is(err, %s) should be FALSE when err := %#v", errInfo.errName, err)
 		c.Check(errors.Is(err, errInfo.errType), gc.Equals, false, gc.Commentf(msg))
 	}
 }
