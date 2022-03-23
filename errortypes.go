@@ -75,9 +75,8 @@ type errWithType struct {
 func (e *errWithType) Is(target error) bool {
 	if &e.errType == nil {
 		return false
-	} else {
-		return target == e.errType
 	}
+	return target == e.errType
 }
 
 // Unwrap an errWithType gives the underlying Err
