@@ -4,7 +4,9 @@
 package errors
 
 import (
+	stderror "errors"
 	"fmt"
+	"strings"
 )
 
 // a ConstError is a prototype for a certain type of error
@@ -12,7 +14,7 @@ type ConstError string
 
 // ConstError implements error
 func (e ConstError) Error() string {
-	return ""
+	return string(e)
 }
 
 // Different types of errors
@@ -54,18 +56,22 @@ const (
 	NotYetAvailable = ConstError("not yet available")
 )
 
+// constSuppressor is a small type wrapper for ConstError to surpress the error
+// value from returning an error value. This allows us to maintain backwards
+// compatibility.
+type constSuppressor ConstError
+
+func (c constSuppressor) Error() string { return "" }
+
+func (c constSuppressor) Unwrap() error { return ConstError(c) }
+
 // errWithType is an Err bundled with its error type (a ConstError)
 type errWithType struct {
-	err     Err
+	error
 	errType ConstError
 }
 
-// errWithType implements error
-func (e *errWithType) Error() string {
-	return e.err.Error()
-}
-
-// e.Is compares `target` with e's error type
+// Is compares `target` with e's error type
 func (e *errWithType) Is(target error) bool {
 	if &e.errType == nil {
 		return false
@@ -74,361 +80,385 @@ func (e *errWithType) Is(target error) bool {
 	}
 }
 
-// Unwrapping an errWithType gives the underlying Err
+// Unwrap an errWithType gives the underlying Err
 func (e *errWithType) Unwrap() error {
-	return &e.err
+	return e.error
 }
 
-// wrap is a helper to construct an *wrapper.
-func wrap(err error, format, suffix string, args ...interface{}) Err {
-	newErr := Err{
-		message:  fmt.Sprintf(format+suffix, args...),
-		previous: err,
+func wrapErrorWithMsg(err error, msg string) error {
+	if msg == "" {
+		return err
 	}
-	newErr.SetLocation(2)
-	return newErr
+	if err == nil {
+		return stderror.New(msg)
+	}
+	return fmt.Errorf("%s: %w", msg, err)
 }
 
-// Timeoutf returns an error which satisfies IsTimeout().
+func makeWrappedConstError(err error, format string, args ...interface{}) error {
+	separator := " "
+	if err.Error() == "" {
+		separator = ""
+	}
+	return fmt.Errorf(strings.Join([]string{format, "%w"}, separator), append(args, err)...)
+}
+
+// Timeoutf returns an error which satisfies Is(err, Timeout) and the Locationer
+// interface.
 func Timeoutf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " timeout", args...),
-		Timeout,
-	}
+	return newLocationError(
+		makeWrappedConstError(Timeout, format, args...),
+		1,
+	)
 }
 
-// NewTimeout returns an error which wraps err that satisfies
-// IsTimeout().
+// NewTimeout returns an error which wraps err and satisfies Is(err, Timeout)
+// and the Locationer interface.
 func NewTimeout(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		Timeout,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: Timeout,
 	}
 }
 
-// IsTimeout reports whether err was created with Timeoutf() or
-// NewTimeout().
+// Deprecated: IsTimeout reports whether err is a  Timeout error. Use
+// Is(err, Timeout).
 func IsTimeout(err error) bool {
 	return Is(err, Timeout)
 }
 
-// NotFoundf returns an error which satisfies IsNotFound().
+// NotFoundf returns an error which satisfies Is(err, NotFound) and the
+// Locationer interface.
 func NotFoundf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " not found", args...),
-		NotFound,
-	}
+	return newLocationError(
+		makeWrappedConstError(NotFound, format, args...),
+		1,
+	)
 }
 
-// NewNotFound returns an error which wraps err that satisfies
-// IsNotFound().
+// NewNotFound returns an error which wraps err and satisfies Is(err, NotFound)
+// and the Locationer interface.
 func NewNotFound(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		NotFound,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: NotFound,
 	}
 }
 
-// IsNotFound reports whether err was created with NotFoundf() or
-// NewNotFound().
+// Deprecated: IsNotFound reports whether err is a NotFound error. Use
+// Is(err, NotFound).
 func IsNotFound(err error) bool {
 	return Is(err, NotFound)
 }
 
-// UserNotFoundf returns an error which satisfies IsUserNotFound().
+// UserNotFoundf returns an error which satisfies Is(err, UserNotFound) and the
+// Locationer interface.
 func UserNotFoundf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " user not found", args...),
-		UserNotFound,
-	}
+	return newLocationError(
+		makeWrappedConstError(UserNotFound, format, args...),
+		1,
+	)
 }
 
 // NewUserNotFound returns an error which wraps err and satisfies
-// IsUserNotFound().
+// Is(err, UserNotFound) and the Locationer interface.
 func NewUserNotFound(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		UserNotFound,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: UserNotFound,
 	}
 }
 
-// IsUserNotFound reports whether err was created with UserNotFoundf() or
-// NewUserNotFound().
+// Deprecated: IsUserNotFound reports whether err is a UserNotFound error. Use
+// Is(err, UserNotFound).
 func IsUserNotFound(err error) bool {
 	return Is(err, UserNotFound)
 }
 
-// Unauthorizedf returns an error which satisfies IsUnauthorized().
+// Unauthorizedf returns an error that satisfies Is(err, Unauthorized) and
+// the Locationer interface.
 func Unauthorizedf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, "", args...),
-		Unauthorized,
-	}
+	return newLocationError(
+		makeWrappedConstError(constSuppressor(Unauthorized), format, args...),
+		1,
+	)
 }
 
 // NewUnauthorized returns an error which wraps err and satisfies
-// IsUnauthorized().
+// Is(err, Unathorized) and the Locationer interface.
 func NewUnauthorized(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		Unauthorized,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: Unauthorized,
 	}
 }
 
-// IsUnauthorized reports whether err was created with Unauthorizedf() or
-// NewUnauthorized().
+// Deprecated: IsUnauthorized reports whether err is a Unauthorized error. Use
+// Is(err, Unauthorized).
 func IsUnauthorized(err error) bool {
 	return Is(err, Unauthorized)
 }
 
-// NotImplementedf returns an error which satisfies IsNotImplemented().
+// NotImplementedf returns an error which satisfies Is(err, NotImplemented) and
+// the Locationer interface.
 func NotImplementedf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " not implemented", args...),
-		NotImplemented,
-	}
+	return newLocationError(
+		makeWrappedConstError(NotImplemented, format, args...),
+		1,
+	)
 }
 
 // NewNotImplemented returns an error which wraps err and satisfies
-// IsNotImplemented().
+// Is(err, NotImplemented) and the Locationer interface.
 func NewNotImplemented(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		NotImplemented,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: NotImplemented,
 	}
 }
 
-// IsNotImplemented reports whether err was created with
-// NotImplementedf() or NewNotImplemented().
+// Deprecated: IsNotImplemented reports whether err is a NotImplemented error.
+// Use Is(err, NotImplemented).
 func IsNotImplemented(err error) bool {
 	return Is(err, NotImplemented)
 }
 
-// AlreadyExistsf returns an error which satisfies IsAlreadyExists().
+// AlreadyExistsf returns an error which satisfies Is(err, AlreadyExists) and
+// the Locationer interface.
 func AlreadyExistsf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " already exists", args...),
-		AlreadyExists,
-	}
+	return newLocationError(
+		makeWrappedConstError(AlreadyExists, format, args...),
+		1,
+	)
 }
 
 // NewAlreadyExists returns an error which wraps err and satisfies
-// IsAlreadyExists().
+// Is(err, AlreadyExists) and the Locationer interface.
 func NewAlreadyExists(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		AlreadyExists,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: AlreadyExists,
 	}
 }
 
-// IsAlreadyExists reports whether the error was created with
-// AlreadyExistsf() or NewAlreadyExists().
+// Deprecated: IsAlreadyExists reports whether the err is a AlreadyExists
+// error. Use Is(err, AlreadyExists).
 func IsAlreadyExists(err error) bool {
 	return Is(err, AlreadyExists)
 }
 
-// NotSupportedf returns an error which satisfies IsNotSupported().
+// NotSupportedf returns an error which satisfies Is(err, NotSupported) and the
+// Locationer interface.
 func NotSupportedf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " not supported", args...),
-		NotSupported,
-	}
+	return newLocationError(
+		makeWrappedConstError(NotSupported, format, args...),
+		1,
+	)
 }
 
-// NewNotSupported returns an error which wraps err and satisfies
-// IsNotSupported().
+// NewNotSupported returns an error which satisfies Is(err, NotSupported) and
+// the Locationer interface.
 func NewNotSupported(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		NotSupported,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: NotSupported,
 	}
 }
 
-// IsNotSupported reports whether the error was created with
-// NotSupportedf() or NewNotSupported().
+// Deprecated: IsNotSupported reports whether err is a NotSupported error. Use
+// Is(err, NotSupported).
 func IsNotSupported(err error) bool {
 	return Is(err, NotSupported)
 }
 
-// NotValidf returns an error which satisfies IsNotValid().
+// NotValidf returns an error which satisfies Is(err, NotValid) and the
+// Locationer interface.
 func NotValidf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " not valid", args...),
-		NotValid,
-	}
+	return newLocationError(
+		makeWrappedConstError(NotValid, format, args...),
+		1,
+	)
 }
 
-// NewNotValid returns an error which wraps err and satisfies IsNotValid().
+// NewNotValid returns an error which wraps err and satisfies Is(err, NotValid)
+// and the Locationer interface.
 func NewNotValid(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		NotValid,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: NotValid,
 	}
 }
 
-// IsNotValid reports whether the error was created with NotValidf() or
-// NewNotValid().
+// Deprecated: IsNotValid reports whether err is a NotValid error. Use
+// Is(err, NotValid).
 func IsNotValid(err error) bool {
 	return Is(err, NotValid)
 }
 
-// NotProvisionedf returns an error which satisfies IsNotProvisioned().
+// NotProvisionedf returns an error which satisfies Is(err, NotProvisioned) and
+// the Locationer interface.
 func NotProvisionedf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " not provisioned", args...),
-		NotProvisioned,
-	}
+	return newLocationError(
+		makeWrappedConstError(NotProvisioned, format, args...),
+		1,
+	)
 }
 
-// NewNotProvisioned returns an error which wraps err that satisfies
-// IsNotProvisioned().
+// NewNotProvisioned returns an error which wraps err and satisfies
+// Is(err, NotProvisioned) and the Locationer interface.
 func NewNotProvisioned(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		NotProvisioned,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: NotProvisioned,
 	}
 }
 
-// IsNotProvisioned reports whether err was created with NotProvisionedf() or
-// NewNotProvisioned().
+// Deprecated: IsNotProvisioned reports whether err is a NotProvisioned error.
+// Use Is(err, NotProvisioned).
 func IsNotProvisioned(err error) bool {
 	return Is(err, NotProvisioned)
 }
 
-// NotAssignedf returns an error which satisfies IsNotAssigned().
+// NotAssignedf returns an error which satisfies Is(err, NotAssigned) and the
+// Locationer interface.
 func NotAssignedf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, " not assigned", args...),
-		NotAssigned,
-	}
+	return newLocationError(
+		makeWrappedConstError(NotAssigned, format, args...),
+		1,
+	)
 }
 
-// NewNotAssigned returns an error which wraps err that satisfies
-// IsNotAssigned().
+// NewNotAssigned returns an error which wraps err and satisfies
+// Is(err, NotAssigned) and the Locationer interface.
 func NewNotAssigned(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		NotAssigned,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: NotAssigned,
 	}
 }
 
-// IsNotAssigned reports whether err was created with NotAssignedf() or
-// NewNotAssigned().
+// Deprecated: IsNotAssigned reports whether err is a NotAssigned error.
+// Use Is(err, NotAssigned)
 func IsNotAssigned(err error) bool {
 	return Is(err, NotAssigned)
 }
 
-// BadRequestf returns an error which satisfies IsBadRequest().
+// BadRequestf returns an error which satisfies Is(err, BadRequest) and the
+// Locationer interface.
 func BadRequestf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, "", args...),
-		BadRequest,
-	}
+	return newLocationError(
+		makeWrappedConstError(constSuppressor(BadRequest), format, args...),
+		1,
+	)
 }
 
-// NewBadRequest returns an error which wraps err that satisfies
-// IsBadRequest().
+// NewBadRequest returns an error which wraps err and satisfies
+// Is(err, BadRequest) and the Locationer interface.
 func NewBadRequest(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		BadRequest,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: BadRequest,
 	}
 }
 
-// IsBadRequest reports whether err was created with BadRequestf() or
-// NewBadRequest().
+// Deprecated: IsBadRequest reports whether err is a BadRequest error.
+// Use Is(err, BadRequest)
 func IsBadRequest(err error) bool {
 	return Is(err, BadRequest)
 }
 
-// MethodNotAllowedf returns an error which satisfies IsMethodNotAllowed().
+// MethodNotAllowedf returns an error which satisfies Is(err, MethodNotAllowed)
+// and the Locationer interface.
 func MethodNotAllowedf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, "", args...),
-		MethodNotAllowed,
-	}
+	return newLocationError(
+		makeWrappedConstError(constSuppressor(MethodNotAllowed), format, args...),
+		1,
+	)
 }
 
-// NewMethodNotAllowed returns an error which wraps err that satisfies
-// IsMethodNotAllowed().
+// NewMethodNotAllowed returns an error which wraps err and satisfies
+// Is(err, MethodNotAllowed) and the Locationer interface.
 func NewMethodNotAllowed(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		MethodNotAllowed,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: MethodNotAllowed,
 	}
 }
 
-// IsMethodNotAllowed reports whether err was created with MethodNotAllowedf() or
-// NewMethodNotAllowed().
+// Deprecated: IsMethodNotAllowed reports whether err is a MethodNotAllowed
+// error. Use Is(err, MethodNotAllowed)
 func IsMethodNotAllowed(err error) bool {
 	return Is(err, MethodNotAllowed)
 }
 
-// Forbiddenf returns an error which satistifes IsForbidden()
+// Forbiddenf returns an error which satistifes Is(err, Forbidden) and the
+// Locationer interface.
 func Forbiddenf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, "", args...),
-		Forbidden,
-	}
+	return newLocationError(
+		makeWrappedConstError(constSuppressor(Forbidden), format, args...),
+		1,
+	)
 }
 
-// NewForbidden returns an error which wraps err that satisfies
-// IsForbidden().
+// NewForbidden returns an error which wraps err and satisfies
+// Is(err, Forbidden) and the Locationer interface.
 func NewForbidden(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		Forbidden,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: Forbidden,
 	}
 }
 
-// IsForbidden reports whether err was created with Forbiddenf() or
-// NewForbidden().
+// Deprecated: IsForbidden reports whether err is a Forbidden error. Use
+// Is(err, Forbidden).
 func IsForbidden(err error) bool {
 	return Is(err, Forbidden)
 }
 
-// QuotaLimitExceededf returns an error which satisfies IsQuotaLimitExceeded.
+// QuotaLimitExceededf returns an error which satisfies
+// Is(err, QuotaLimitExceeded) and the Locationer interface.
 func QuotaLimitExceededf(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, "", args...),
-		QuotaLimitExceeded,
-	}
+	return newLocationError(
+		makeWrappedConstError(constSuppressor(QuotaLimitExceeded), format, args...),
+		1,
+	)
 }
 
 // NewQuotaLimitExceeded returns an error which wraps err and satisfies
-// IsQuotaLimitExceeded.
+// Is(err, QuotaLimitExceeded) and the Locationer interface.
 func NewQuotaLimitExceeded(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		QuotaLimitExceeded,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: QuotaLimitExceeded,
 	}
 }
 
-// IsQuotaLimitExceeded returns true if the given error represents a
-// QuotaLimitExceeded error.
+// Deprecated: IsQuotaLimitExceeded reports whether err is a QuoteLimitExceeded
+// err. Use Is(err, QuotaLimitExceeded).
 func IsQuotaLimitExceeded(err error) bool {
 	return Is(err, QuotaLimitExceeded)
 }
 
-// NotYetAvailablef returns an error which satisfies IsNotYetAvailable.
+// NotYetAvailablef returns an error which satisfies Is(err, NotYetAvailable)
+// and the Locationer interface.
 func NotYetAvailablef(format string, args ...interface{}) error {
-	return &errWithType{
-		wrap(nil, format, "", args...),
-		NotYetAvailable,
-	}
+	return newLocationError(
+		makeWrappedConstError(constSuppressor(NotYetAvailable), format, args...),
+		1,
+	)
 }
 
 // NewNotYetAvailable returns an error which wraps err and satisfies
-// IsNotYetAvailable.
+// Is(err, NotYetAvailable) and the Locationer interface.
 func NewNotYetAvailable(err error, msg string) error {
 	return &errWithType{
-		wrap(err, msg, ""),
-		NotYetAvailable,
+		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
+		errType: NotYetAvailable,
 	}
 }
 
-// IsNotYetAvailable reports err was created with NotYetAvailablef or
-// NewNotYetAvailable.
+// Deprecated: IsNotYetAvailable reports whether err is a NotYetAvailable err.
+// Use Is(err, NotYetAvailable)
 func IsNotYetAvailable(err error) bool {
 	return Is(err, NotYetAvailable)
 }
