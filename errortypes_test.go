@@ -6,18 +6,17 @@ package errors_test
 import (
 	stderrors "errors"
 	"fmt"
-	"reflect"
-	"runtime"
 
 	"github.com/juju/errors"
 	gc "gopkg.in/check.v1"
 )
 
-// errorInfo holds information about a single error type: a satisfier
-// function, wrapping and variable arguments constructors and message
+// errorInfo holds information about a single error type: its type
+// and name, wrapping and variable arguments constructors and message
 // suffix.
 type errorInfo struct {
-	satisfier       func(error) bool
+	errType         errors.ConstError
+	errName         string
 	argsConstructor func(string, ...interface{}) error
 	wrapConstructor func(error, string) error
 	suffix          string
@@ -26,38 +25,32 @@ type errorInfo struct {
 // allErrors holds information for all defined errors. When adding new
 // errors, add them here as well to include them in tests.
 var allErrors = []*errorInfo{
-	{errors.IsTimeout, errors.Timeoutf, errors.NewTimeout, " timeout"},
-	{errors.IsNotFound, errors.NotFoundf, errors.NewNotFound, " not found"},
-	{errors.IsUserNotFound, errors.UserNotFoundf, errors.NewUserNotFound, " user not found"},
-	{errors.IsUnauthorized, errors.Unauthorizedf, errors.NewUnauthorized, ""},
-	{errors.IsNotImplemented, errors.NotImplementedf, errors.NewNotImplemented, " not implemented"},
-	{errors.IsAlreadyExists, errors.AlreadyExistsf, errors.NewAlreadyExists, " already exists"},
-	{errors.IsNotSupported, errors.NotSupportedf, errors.NewNotSupported, " not supported"},
-	{errors.IsNotValid, errors.NotValidf, errors.NewNotValid, " not valid"},
-	{errors.IsNotProvisioned, errors.NotProvisionedf, errors.NewNotProvisioned, " not provisioned"},
-	{errors.IsNotAssigned, errors.NotAssignedf, errors.NewNotAssigned, " not assigned"},
-	{errors.IsMethodNotAllowed, errors.MethodNotAllowedf, errors.NewMethodNotAllowed, ""},
-	{errors.IsBadRequest, errors.BadRequestf, errors.NewBadRequest, ""},
-	{errors.IsForbidden, errors.Forbiddenf, errors.NewForbidden, ""},
-	{errors.IsQuotaLimitExceeded, errors.QuotaLimitExceededf, errors.NewQuotaLimitExceeded, ""},
-	{errors.IsNotYetAvailable, errors.NotYetAvailablef, errors.NewNotYetAvailable, ""},
+	{errors.Timeout, "Timeout", errors.Timeoutf, errors.NewTimeout, " timeout"},
+	{errors.NotFound, "NotFound", errors.NotFoundf, errors.NewNotFound, " not found"},
+	{errors.UserNotFound, "UserNotFound", errors.UserNotFoundf, errors.NewUserNotFound, " user not found"},
+	{errors.Unauthorized, "Unauthorized", errors.Unauthorizedf, errors.NewUnauthorized, ""},
+	{errors.NotImplemented, "NotImplemented", errors.NotImplementedf, errors.NewNotImplemented, " not implemented"},
+	{errors.AlreadyExists, "AlreadyExists", errors.AlreadyExistsf, errors.NewAlreadyExists, " already exists"},
+	{errors.NotSupported, "NotSupported", errors.NotSupportedf, errors.NewNotSupported, " not supported"},
+	{errors.NotValid, "NotValid", errors.NotValidf, errors.NewNotValid, " not valid"},
+	{errors.NotProvisioned, "NotProvisioned", errors.NotProvisionedf, errors.NewNotProvisioned, " not provisioned"},
+	{errors.NotAssigned, "NotAssigned", errors.NotAssignedf, errors.NewNotAssigned, " not assigned"},
+	{errors.MethodNotAllowed, "MethodNotAllowed", errors.MethodNotAllowedf, errors.NewMethodNotAllowed, ""},
+	{errors.BadRequest, "BadRequest", errors.BadRequestf, errors.NewBadRequest, ""},
+	{errors.Forbidden, "Forbidden", errors.Forbiddenf, errors.NewForbidden, ""},
+	{errors.QuotaLimitExceeded, "QuotaLimitExceeded", errors.QuotaLimitExceededf, errors.NewQuotaLimitExceeded, ""},
+	{errors.NotYetAvailable, "NotYetAvailable", errors.NotYetAvailablef, errors.NewNotYetAvailable, ""},
 }
 
 type errorTypeSuite struct{}
 
 var _ = gc.Suite(&errorTypeSuite{})
 
-func (t *errorInfo) satisfierName() string {
-	value := reflect.ValueOf(t.satisfier)
-	f := runtime.FuncForPC(value.Pointer())
-	return f.Name()
-}
-
 func (t *errorInfo) equal(t0 *errorInfo) bool {
 	if t0 == nil {
 		return false
 	}
-	return t.satisfierName() == t0.satisfierName()
+	return t == t0
 }
 
 type errorTest struct {
@@ -73,15 +66,15 @@ func deferredAnnotatef(err error, format string, args ...interface{}) error {
 
 func mustSatisfy(c *gc.C, err error, errInfo *errorInfo) {
 	if errInfo != nil {
-		msg := fmt.Sprintf("%#v must satisfy %v", err, errInfo.satisfierName())
-		c.Check(err, Satisfies, errInfo.satisfier, gc.Commentf(msg))
+		msg := fmt.Sprintf("Is(err, %s) should be TRUE when err := %#v", errInfo.errName, err)
+		c.Check(errors.Is(err, errInfo.errType), gc.Equals, true, gc.Commentf(msg))
 	}
 }
 
 func mustNotSatisfy(c *gc.C, err error, errInfo *errorInfo) {
 	if errInfo != nil {
-		msg := fmt.Sprintf("%#v must not satisfy %v", err, errInfo.satisfierName())
-		c.Check(err, gc.Not(Satisfies), errInfo.satisfier, gc.Commentf(msg))
+		msg := fmt.Sprintf("Is(err, %s) should be FALSE when err := %#v", errInfo.errName, err)
+		c.Check(errors.Is(err, errInfo.errType), gc.Equals, false, gc.Commentf(msg))
 	}
 }
 

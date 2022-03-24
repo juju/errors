@@ -173,7 +173,7 @@ func (*functionSuite) TestCause(c *gc.C) {
 	err = errors.Annotate(err, "annotated")
 	c.Assert(errors.Cause(err), gc.Equals, fmtErr)
 
-	err = errors.Maskf(err, "maksed")
+	err = errors.Maskf(err, "masked")
 	c.Assert(errors.Cause(err), gc.Equals, err)
 
 	// Look for a file that we know isn't there.
