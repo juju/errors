@@ -53,11 +53,20 @@ type locationError struct {
 }
 
 // newLocationError constructs a new Locationer error from the supplied error
-// with the location set to callDepth in the stack.
+// with the location set to callDepth in the stack. If a nill error is provided
+// to this function then a new empty error is constructed.
 func newLocationError(err error, callDepth int) *locationError {
 	le := &locationError{error: err}
 	le.function, le.line = getLocation(callDepth + 1)
 	return le
+}
+
+// Error implementes the error interface.
+func (l *locationError) Error() string {
+	if l.error == nil {
+		return ""
+	}
+	return l.error.Error()
 }
 
 // *locationError implements Locationer.Location interface

@@ -167,3 +167,13 @@ func (*errorTypeSuite) TestAllErrors(c *gc.C) {
 
 	runErrorTests(c, errorTests, true)
 }
+
+// TestThatYouAlwaysGetError is a regression test for checking that the wrap
+// constructor for our error types always returns a valid error object even if
+// don't feed the construct with an instantiated error or a non empty string.
+func (*errorTypeSuite) TestThatYouAlwaysGetError(c *gc.C) {
+	for _, errType := range allErrors {
+		err := errType.wrapConstructor(nil, "")
+		c.Assert(err.Error(), gc.Equals, "")
+	}
+}
