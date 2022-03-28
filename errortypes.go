@@ -85,11 +85,11 @@ func (e *errWithType) Unwrap() error {
 }
 
 func wrapErrorWithMsg(err error, msg string) error {
-	if msg == "" {
-		return err
-	}
 	if err == nil {
 		return stderror.New(msg)
+	}
+	if msg == "" {
+		return err
 	}
 	return fmt.Errorf("%s: %w", msg, err)
 }
