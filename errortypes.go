@@ -102,6 +102,24 @@ func makeWrappedConstError(err error, format string, args ...interface{}) error 
 	return fmt.Errorf(strings.Join([]string{format, "%w"}, separator), append(args, err)...)
 }
 
+// WithType is responsible for annotating an already existing error so that it
+// also satisfies that of a ConstError. The resultant error returned should
+// satisfy Is(err, errType). If err is nil then a nil error will also be returned.
+//
+// Now with Go's Is, As and Unwrap support it no longer makes sense to Wrap()
+// 2 errors as both of those errors could be chains of errors in their own right.
+// WithType aims to solve some of the usefulness of Wrap with the ability to
+// make a pre-existing error also satisfy a ConstError type.
+func WithType(err error, errType ConstError) error {
+	if err == nil {
+		return nil
+	}
+	return &errWithType{
+		error:   err,
+		errType: errType,
+	}
+}
+
 // Timeoutf returns an error which satisfies Is(err, Timeout) and the Locationer
 // interface.
 func Timeoutf(format string, args ...interface{}) error {

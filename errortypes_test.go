@@ -177,3 +177,19 @@ func (*errorTypeSuite) TestThatYouAlwaysGetError(c *gc.C) {
 		c.Assert(err.Error(), gc.Equals, "")
 	}
 }
+
+func (*errorTypeSuite) TestWithTypeNil(c *gc.C) {
+	myErr := errors.ConstError("do you feel lucky?")
+	c.Assert(errors.WithType(nil, myErr), gc.IsNil)
+}
+
+func (*errorTypeSuite) TestWithType(c *gc.C) {
+	myErr := errors.ConstError("do you feel lucky?")
+	myErr2 := errors.ConstError("i don't feel lucky")
+	err := errors.New("yes")
+
+	err = errors.WithType(err, myErr)
+	c.Assert(errors.Is(err, myErr), gc.Equals, true)
+	c.Assert(err.Error(), gc.Equals, "yes")
+	c.Assert(errors.Is(err, myErr2), gc.Equals, false)
+}

@@ -373,3 +373,17 @@ func (*functionSuite) TestIs(c *gc.C) {
 		c.Check(val, gc.Equals, true)
 	}
 }
+
+func (*functionSuite) TestSetLocationWithNilError(c *gc.C) {
+	c.Assert(errors.SetLocation(nil, 1), gc.IsNil)
+}
+
+func (*functionSuite) TestSetLocation(c *gc.C) {
+	err := errors.New("test")
+	err = errors.SetLocation(err, 1)
+	stack := fmt.Sprintf("%s: test", errorLocationValue(c))
+	_, implements := err.(errors.Locationer)
+	c.Assert(implements, gc.Equals, true)
+
+	c.Check(errors.ErrorStack(err), gc.Equals, stack)
+}
