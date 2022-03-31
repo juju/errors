@@ -355,3 +355,15 @@ func Is(err, target error) bool {
 func As(err error, target interface{}) bool {
 	return stderrors.As(err, target)
 }
+
+// SetLocation takes a given error and records where in the stack SetLocation
+// was called from and returns the wrapped error with the location information
+// set. The returned error implements the Locationer interface. If err is nil
+// then a nil error is returned.
+func SetLocation(err error, callDepth int) error {
+	if err == nil {
+		return nil
+	}
+
+	return newLocationError(err, callDepth)
+}
