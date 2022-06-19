@@ -4,6 +4,7 @@
 package errors_test
 
 import (
+	stderrors "errors"
 	"fmt"
 	"io"
 	"os"
@@ -45,7 +46,7 @@ func (*functionSuite) TestTrace(c *gc.C) {
 	loc := errorLocationValue(c)
 
 	c.Assert(err.Error(), gc.Equals, "first")
-	c.Assert(errors.Cause(err), gc.Equals, first)
+	c.Assert(errors.Is(err, first), gc.Equals, true)
 	c.Assert(errors.Details(err), Contains, loc)
 
 	c.Assert(errors.Trace(nil), gc.IsNil)
@@ -386,4 +387,89 @@ func (*functionSuite) TestSetLocation(c *gc.C) {
 	c.Assert(implements, gc.Equals, true)
 
 	c.Check(errors.ErrorStack(err), gc.Equals, stack)
+}
+
+func (*functionSuite) TestHideErrorStillReturnsErrorString(c *gc.C) {
+	err := stderrors.New("This is a simple error")
+	err = errors.Hide(err)
+
+	c.Assert(err.Error(), gc.Equals, "This is a simple error")
+}
+
+func (*functionSuite) TestQuietWrappedErrorStillSatisfied(c *gc.C) {
+	simpleTestError := errors.ConstError("I am a teapot")
+	err := fmt.Errorf("fill me up%w", errors.Hide(simpleTestError))
+	c.Assert(err.Error(), gc.Equals, "fill me up")
+	c.Assert(errors.Is(err, simpleTestError), gc.Equals, true)
+}
+
+type FooError struct {
+}
+
+func (*FooError) Error() string {
+	return "I am here boss"
+}
+
+type complexError struct {
+	Message string
+}
+
+func (c *complexError) Error() string {
+	return c.Message
+}
+
+type complexErrorOther struct {
+	Message string
+}
+
+func (c *complexErrorOther) Error() string {
+	return c.Message
+}
+
+func (*functionSuite) TestIsType(c *gc.C) {
+	complexErr := &complexError{Message: "complex error message"}
+	wrapped1 := fmt.Errorf("wrapping1: %w", complexErr)
+	wrapped2 := fmt.Errorf("wrapping2: %w", wrapped1)
+
+	c.Assert(errors.IsType[*complexError](complexErr), gc.Equals, true)
+	c.Assert(errors.IsType[*complexError](wrapped1), gc.Equals, true)
+	c.Assert(errors.IsType[*complexError](wrapped2), gc.Equals, true)
+	c.Assert(errors.IsType[*complexErrorOther](complexErr), gc.Equals, false)
+	c.Assert(errors.IsType[*complexErrorOther](wrapped1), gc.Equals, false)
+	c.Assert(errors.IsType[*complexErrorOther](wrapped2), gc.Equals, false)
+
+	err := errors.New("test")
+	c.Assert(errors.IsType[*complexErrorOther](err), gc.Equals, false)
+
+	c.Assert(errors.IsType[*complexErrorOther](nil), gc.Equals, false)
+}
+
+func ExampleHide() {
+	myConstError := errors.ConstError("I don't want to be fmt printed")
+	err := fmt.Errorf("don't show this error%w", errors.Hide(myConstError))
+
+	fmt.Println(err)
+	fmt.Println(stderrors.Is(err, myConstError))
+
+	// Output:
+	// don't show this error
+	// true
+}
+
+type MyError struct {
+	Message string
+}
+
+func (m *MyError) Error() string {
+	return m.Message
+}
+
+func ExampleIsType() {
+	myErr := &MyError{Message: "these are not the droids you're looking for"}
+	err := fmt.Errorf("wrapped: %w", myErr)
+	is := errors.IsType[*MyError](err)
+	fmt.Println(is)
+
+	// Output:
+	// true
 }

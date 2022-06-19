@@ -56,6 +56,7 @@ func getLocation(callDepth int) (string, int) {
 //   }
 //
 func Trace(other error) error {
+	//return SetLocation(other, 2)
 	if other == nil {
 		return nil
 	}
@@ -350,6 +351,20 @@ func Is(err, target error) bool {
 	return stderrors.Is(err, target)
 }
 
+// IsType is a convenience method for ascertaining if an error contains the
+// target error type within its chain. This is aimed at ease of development
+// where a more complicated error type wants to be to checked for existence but
+// pointer var of that type is too much overhead.
+func IsType[t error](err error) bool {
+	for err != nil {
+		if _, is := err.(t); is {
+			return true
+		}
+		err = stderrors.Unwrap(err)
+	}
+	return false
+}
+
 // As is a proxy for the As function in Go's standard `errors` library
 // (pkg.go.dev/errors).
 func As(err error, target interface{}) bool {
@@ -366,4 +381,37 @@ func SetLocation(err error, callDepth int) error {
 	}
 
 	return newLocationError(err, callDepth)
+}
+
+// fmtNoop provides an internal type for wrapping errors so they won't be
+// printed in fmt type commands. As this type is used by the Hide function it's
+// expected that error not be nil.
+type fmtNoop struct {
+	error
+}
+
+// Format implements the fmt.Formatter interface so that the error wrapped by
+// fmtNoop will not be printed.
+func (*fmtNoop) Format(_ fmt.State, r rune) {}
+
+// Is implements errors.Is. It useful for us to be able to check if an error
+// chain has fmtNoop for formatting purposes.
+func (f *fmtNoop) Is(err error) bool {
+	_, is := err.(*fmtNoop)
+	return is
+}
+
+// Unwrap implements the errors.Unwrap method returning the error wrapped by
+// fmtNoop.
+func (f *fmtNoop) Unwrap() error {
+	return f.error
+}
+
+// Hide takes an error and silences it's error string from appearing in fmt
+// like
+func Hide(err error) error {
+	if err == nil {
+		return nil
+	}
+	return &fmtNoop{err}
 }
