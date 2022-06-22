@@ -351,24 +351,61 @@ func Is(err, target error) bool {
 	return stderrors.Is(err, target)
 }
 
-// IsType is a convenience method for ascertaining if an error contains the
-// target error type within its chain. This is aimed at ease of development
-// where a more complicated error type wants to be to checked for existence but
-// pointer var of that type is too much overhead.
-func IsType[t error](err error) bool {
-	for err != nil {
-		if _, is := err.(t); is {
-			return true
-		}
-		err = stderrors.Unwrap(err)
-	}
-	return false
+// HasType is a function wrapper around AsType dropping the where return value
+// from AsType() making a function that can be used like this:
+//
+//  return HasType[*MyError](err)
+//
+// Or
+//
+//  if HasType[*MyError](err) {}
+func HasType[T error](err error) bool {
+	_, rval := AsType[T](err)
+	return rval
 }
 
 // As is a proxy for the As function in Go's standard `errors` library
 // (pkg.go.dev/errors).
 func As(err error, target interface{}) bool {
 	return stderrors.As(err, target)
+}
+
+// AsType is a convenience method for checking and getting an error from within
+// a chain that is of type T. If no error is found of type T in the chain the
+// zero value of T is returned with false. If an error in the chain implementes
+// As(any) bool then it's As method will be called if it's type is not of type T.
+
+// AsType finds the first error in err's chain that is assignable to type T, and
+// if a match is found, returns that error value and true. Otherwise, it returns
+// T's zero value and false.
+//
+// AsType is equivalent to errors.As, but uses a type parameter and returns
+// the target, to avoid having to define a variable before the call. For
+// example, callers can replace this:
+//
+//  var pathError *fs.PathError
+//  if errors.As(err, &pathError) {
+//      fmt.Println("Failed at path:", pathError.Path)
+//  }
+//
+// With:
+//
+//  if pathError, ok := errors.AsType[*fs.PathError](err); ok {
+//      fmt.Println("Failed at path:", pathError.Path)
+//  }
+func AsType[T error](err error) (T, bool) {
+	for err != nil {
+		if e, is := err.(T); is {
+			return e, true
+		}
+		var res T
+		if x, ok := err.(interface{ As(any) bool }); ok && x.As(&res) {
+			return res, true
+		}
+		err = stderrors.Unwrap(err)
+	}
+	var zero T
+	return zero, false
 }
 
 // SetLocation takes a given error and records where in the stack SetLocation
