@@ -130,12 +130,6 @@ func NewTimeout(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsTimeout reports whether err is a  Timeout error. Use
-// Is(err, Timeout).
-func IsTimeout(err error) bool {
-	return Is(err, Timeout)
-}
-
 // NotFoundf returns an error which satisfies Is(err, NotFound) and the
 // Locationer interface.
 func NotFoundf(format string, args ...interface{}) error {
@@ -152,12 +146,6 @@ func NewNotFound(err error, msg string) error {
 		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
 		errType: NotFound,
 	}
-}
-
-// Deprecated: IsNotFound reports whether err is a NotFound error. Use
-// Is(err, NotFound).
-func IsNotFound(err error) bool {
-	return Is(err, NotFound)
 }
 
 // UserNotFoundf returns an error which satisfies Is(err, UserNotFound) and the
@@ -178,12 +166,6 @@ func NewUserNotFound(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsUserNotFound reports whether err is a UserNotFound error. Use
-// Is(err, UserNotFound).
-func IsUserNotFound(err error) bool {
-	return Is(err, UserNotFound)
-}
-
 // Unauthorizedf returns an error that satisfies Is(err, Unauthorized) and
 // the Locationer interface.
 func Unauthorizedf(format string, args ...interface{}) error {
@@ -200,12 +182,6 @@ func NewUnauthorized(err error, msg string) error {
 		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
 		errType: Unauthorized,
 	}
-}
-
-// Deprecated: IsUnauthorized reports whether err is a Unauthorized error. Use
-// Is(err, Unauthorized).
-func IsUnauthorized(err error) bool {
-	return Is(err, Unauthorized)
 }
 
 // NotImplementedf returns an error which satisfies Is(err, NotImplemented) and
@@ -226,12 +202,6 @@ func NewNotImplemented(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsNotImplemented reports whether err is a NotImplemented error.
-// Use Is(err, NotImplemented).
-func IsNotImplemented(err error) bool {
-	return Is(err, NotImplemented)
-}
-
 // AlreadyExistsf returns an error which satisfies Is(err, AlreadyExists) and
 // the Locationer interface.
 func AlreadyExistsf(format string, args ...interface{}) error {
@@ -248,12 +218,6 @@ func NewAlreadyExists(err error, msg string) error {
 		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
 		errType: AlreadyExists,
 	}
-}
-
-// Deprecated: IsAlreadyExists reports whether the err is a AlreadyExists
-// error. Use Is(err, AlreadyExists).
-func IsAlreadyExists(err error) bool {
-	return Is(err, AlreadyExists)
 }
 
 // NotSupportedf returns an error which satisfies Is(err, NotSupported) and the
@@ -274,12 +238,6 @@ func NewNotSupported(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsNotSupported reports whether err is a NotSupported error. Use
-// Is(err, NotSupported).
-func IsNotSupported(err error) bool {
-	return Is(err, NotSupported)
-}
-
 // NotValidf returns an error which satisfies Is(err, NotValid) and the
 // Locationer interface.
 func NotValidf(format string, args ...interface{}) error {
@@ -296,12 +254,6 @@ func NewNotValid(err error, msg string) error {
 		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
 		errType: NotValid,
 	}
-}
-
-// Deprecated: IsNotValid reports whether err is a NotValid error. Use
-// Is(err, NotValid).
-func IsNotValid(err error) bool {
-	return Is(err, NotValid)
 }
 
 // NotProvisionedf returns an error which satisfies Is(err, NotProvisioned) and
@@ -322,12 +274,6 @@ func NewNotProvisioned(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsNotProvisioned reports whether err is a NotProvisioned error.
-// Use Is(err, NotProvisioned).
-func IsNotProvisioned(err error) bool {
-	return Is(err, NotProvisioned)
-}
-
 // NotAssignedf returns an error which satisfies Is(err, NotAssigned) and the
 // Locationer interface.
 func NotAssignedf(format string, args ...interface{}) error {
@@ -344,12 +290,6 @@ func NewNotAssigned(err error, msg string) error {
 		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
 		errType: NotAssigned,
 	}
-}
-
-// Deprecated: IsNotAssigned reports whether err is a NotAssigned error.
-// Use Is(err, NotAssigned)
-func IsNotAssigned(err error) bool {
-	return Is(err, NotAssigned)
 }
 
 // BadRequestf returns an error which satisfies Is(err, BadRequest) and the
@@ -370,12 +310,6 @@ func NewBadRequest(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsBadRequest reports whether err is a BadRequest error.
-// Use Is(err, BadRequest)
-func IsBadRequest(err error) bool {
-	return Is(err, BadRequest)
-}
-
 // MethodNotAllowedf returns an error which satisfies Is(err, MethodNotAllowed)
 // and the Locationer interface.
 func MethodNotAllowedf(format string, args ...interface{}) error {
@@ -392,12 +326,6 @@ func NewMethodNotAllowed(err error, msg string) error {
 		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
 		errType: MethodNotAllowed,
 	}
-}
-
-// Deprecated: IsMethodNotAllowed reports whether err is a MethodNotAllowed
-// error. Use Is(err, MethodNotAllowed)
-func IsMethodNotAllowed(err error) bool {
-	return Is(err, MethodNotAllowed)
 }
 
 // Forbiddenf returns an error which satistifes Is(err, Forbidden) and the
@@ -418,12 +346,6 @@ func NewForbidden(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsForbidden reports whether err is a Forbidden error. Use
-// Is(err, Forbidden).
-func IsForbidden(err error) bool {
-	return Is(err, Forbidden)
-}
-
 // QuotaLimitExceededf returns an error which satisfies
 // Is(err, QuotaLimitExceeded) and the Locationer interface.
 func QuotaLimitExceededf(format string, args ...interface{}) error {
@@ -442,12 +364,6 @@ func NewQuotaLimitExceeded(err error, msg string) error {
 	}
 }
 
-// Deprecated: IsQuotaLimitExceeded reports whether err is a QuoteLimitExceeded
-// err. Use Is(err, QuotaLimitExceeded).
-func IsQuotaLimitExceeded(err error) bool {
-	return Is(err, QuotaLimitExceeded)
-}
-
 // NotYetAvailablef returns an error which satisfies Is(err, NotYetAvailable)
 // and the Locationer interface.
 func NotYetAvailablef(format string, args ...interface{}) error {
@@ -464,10 +380,4 @@ func NewNotYetAvailable(err error, msg string) error {
 		error:   newLocationError(wrapErrorWithMsg(err, msg), 1),
 		errType: NotYetAvailable,
 	}
-}
-
-// Deprecated: IsNotYetAvailable reports whether err is a NotYetAvailable err.
-// Use Is(err, NotYetAvailable)
-func IsNotYetAvailable(err error) bool {
-	return Is(err, NotYetAvailable)
 }
