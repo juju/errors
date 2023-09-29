@@ -193,3 +193,29 @@ func (*errorTypeSuite) TestWithType(c *gc.C) {
 	c.Assert(err.Error(), gc.Equals, "yes")
 	c.Assert(errors.Is(err, myErr2), gc.Equals, false)
 }
+
+func (*errorTypeSuite) TestBadFormatNotEnoughArgs(c *gc.C) {
+	errorTests := make([]errorTest, 0, len(allErrors))
+	for _, errInfo := range allErrors {
+		errorTests = append(errorTests, errorTest{
+			errInfo.argsConstructor("missing arg %v"),
+			".*" + errInfo.suffix,
+			errInfo,
+		})
+	}
+
+	runErrorTests(c, errorTests, true)
+}
+
+func (*errorTypeSuite) TestBadFormatTooManyArgs(c *gc.C) {
+	errorTests := make([]errorTest, 0, len(allErrors))
+	for _, errInfo := range allErrors {
+		errorTests = append(errorTests, errorTest{
+			errInfo.argsConstructor("extra arg %v", "foo", "bar"),
+			".*" + errInfo.suffix,
+			errInfo,
+		})
+	}
+
+	runErrorTests(c, errorTests, true)
+}
