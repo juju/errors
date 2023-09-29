@@ -4,10 +4,8 @@
 package errors
 
 import (
-	"errors"
 	stderror "errors"
 	"fmt"
-	"strings"
 )
 
 // a ConstError is a prototype for a certain type of error
@@ -86,12 +84,17 @@ func wrapErrorWithMsg(err error, msg string) error {
 	return fmt.Errorf("%s: %w", msg, err)
 }
 
-func makeWrappedConstError(err error, format string, args ...interface{}) error {
-	separator := " "
-	if err.Error() == "" || errors.Is(err, &fmtNoop{}) {
-		separator = ""
+// fmtErrWithType returns an error with the provided error type and format.
+func fmtErrWithType(errType ConstError, hideSuffix bool, format string, args ...interface{}) error {
+	msg := fmt.Sprintf(format, args...)
+	if !hideSuffix {
+		msg += " " + errType.Error()
 	}
-	return fmt.Errorf(strings.Join([]string{format, "%w"}, separator), append(args, err)...)
+
+	return &errWithType{
+		error:   New(msg),
+		errType: errType,
+	}
 }
 
 // WithType is responsible for annotating an already existing error so that it
@@ -116,7 +119,7 @@ func WithType(err error, errType ConstError) error {
 // interface.
 func Timeoutf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(Timeout, format, args...),
+		fmtErrWithType(Timeout, false, format, args...),
 		1,
 	)
 }
@@ -140,7 +143,7 @@ func IsTimeout(err error) bool {
 // Locationer interface.
 func NotFoundf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(NotFound, format, args...),
+		fmtErrWithType(NotFound, false, format, args...),
 		1,
 	)
 }
@@ -164,7 +167,7 @@ func IsNotFound(err error) bool {
 // Locationer interface.
 func UserNotFoundf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(UserNotFound, format, args...),
+		fmtErrWithType(UserNotFound, false, format, args...),
 		1,
 	)
 }
@@ -188,7 +191,7 @@ func IsUserNotFound(err error) bool {
 // the Locationer interface.
 func Unauthorizedf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(Hide(Unauthorized), format, args...),
+		fmtErrWithType(Unauthorized, true, format, args...),
 		1,
 	)
 }
@@ -212,7 +215,7 @@ func IsUnauthorized(err error) bool {
 // the Locationer interface.
 func NotImplementedf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(NotImplemented, format, args...),
+		fmtErrWithType(NotImplemented, false, format, args...),
 		1,
 	)
 }
@@ -236,7 +239,7 @@ func IsNotImplemented(err error) bool {
 // the Locationer interface.
 func AlreadyExistsf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(AlreadyExists, format, args...),
+		fmtErrWithType(AlreadyExists, false, format, args...),
 		1,
 	)
 }
@@ -260,7 +263,7 @@ func IsAlreadyExists(err error) bool {
 // Locationer interface.
 func NotSupportedf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(NotSupported, format, args...),
+		fmtErrWithType(NotSupported, false, format, args...),
 		1,
 	)
 }
@@ -284,7 +287,7 @@ func IsNotSupported(err error) bool {
 // Locationer interface.
 func NotValidf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(NotValid, format, args...),
+		fmtErrWithType(NotValid, false, format, args...),
 		1,
 	)
 }
@@ -308,7 +311,7 @@ func IsNotValid(err error) bool {
 // the Locationer interface.
 func NotProvisionedf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(NotProvisioned, format, args...),
+		fmtErrWithType(NotProvisioned, false, format, args...),
 		1,
 	)
 }
@@ -332,7 +335,7 @@ func IsNotProvisioned(err error) bool {
 // Locationer interface.
 func NotAssignedf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(NotAssigned, format, args...),
+		fmtErrWithType(NotAssigned, false, format, args...),
 		1,
 	)
 }
@@ -356,7 +359,7 @@ func IsNotAssigned(err error) bool {
 // Locationer interface.
 func BadRequestf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(Hide(BadRequest), format, args...),
+		fmtErrWithType(BadRequest, true, format, args...),
 		1,
 	)
 }
@@ -380,7 +383,7 @@ func IsBadRequest(err error) bool {
 // and the Locationer interface.
 func MethodNotAllowedf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(Hide(MethodNotAllowed), format, args...),
+		fmtErrWithType(MethodNotAllowed, true, format, args...),
 		1,
 	)
 }
@@ -404,7 +407,7 @@ func IsMethodNotAllowed(err error) bool {
 // Locationer interface.
 func Forbiddenf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(Hide(Forbidden), format, args...),
+		fmtErrWithType(Forbidden, true, format, args...),
 		1,
 	)
 }
@@ -428,7 +431,7 @@ func IsForbidden(err error) bool {
 // Is(err, QuotaLimitExceeded) and the Locationer interface.
 func QuotaLimitExceededf(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(Hide(QuotaLimitExceeded), format, args...),
+		fmtErrWithType(QuotaLimitExceeded, true, format, args...),
 		1,
 	)
 }
@@ -452,7 +455,7 @@ func IsQuotaLimitExceeded(err error) bool {
 // and the Locationer interface.
 func NotYetAvailablef(format string, args ...interface{}) error {
 	return newLocationError(
-		makeWrappedConstError(Hide(NotYetAvailable), format, args...),
+		fmtErrWithType(NotYetAvailable, true, format, args...),
 		1,
 	)
 }
