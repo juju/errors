@@ -199,7 +199,7 @@ func (*errorTypeSuite) TestBadFormatNotEnoughArgs(c *gc.C) {
 	for _, errInfo := range allErrors {
 		errorTests = append(errorTests, errorTest{
 			errInfo.argsConstructor("missing arg %v"),
-			".*",
+			".*" + errInfo.suffix,
 			errInfo,
 		})
 	}
@@ -212,7 +212,7 @@ func (*errorTypeSuite) TestBadFormatTooManyArgs(c *gc.C) {
 	for _, errInfo := range allErrors {
 		errorTests = append(errorTests, errorTest{
 			errInfo.argsConstructor("extra arg %v", "foo", "bar"),
-			".*",
+			".*" + errInfo.suffix,
 			errInfo,
 		})
 	}
