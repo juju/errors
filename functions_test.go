@@ -66,7 +66,7 @@ func (*functionSuite) TestAnnotate(c *gc.C) {
 
 func (*functionSuite) TestAnnotatef(c *gc.C) {
 	first := errors.New("first")
-	err := errors.Annotatef(first, "annotation %d", 2) //err annotatefTest
+	err := errors.Annotatef(first, "annotation %d", 2) // err annotatefTest
 	loc := errorLocationValue(c)
 
 	c.Assert(err.Error(), gc.Equals, "annotation 2: first")
@@ -189,10 +189,6 @@ func (*functionSuite) TestCause(c *gc.C) {
 	c.Assert(os.IsNotExist(errors.Cause(err)), gc.Equals, true)
 }
 
-type tracer interface {
-	StackTrace() []string
-}
-
 func (*functionSuite) TestErrorStack(c *gc.C) {
 	for i, test := range []struct {
 		message   string
@@ -223,7 +219,7 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 			err := errors.New("first error")
 			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
 			err = errors.Annotate(err, "annotation")
-			fmt.Fprintf(expected, "%s: annotation", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: annotation: first error", errorLocationValue(c))
 			return err
 		},
 		tracer: true,
@@ -245,7 +241,7 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 			err = errors.Wrap(err, fmt.Errorf("detailed error"))
 			fmt.Fprintf(expected, "%s: detailed error\n", errorLocationValue(c))
 			err = errors.Annotatef(err, "annotated")
-			fmt.Fprintf(expected, "%s: annotated", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: annotated: detailed error", errorLocationValue(c))
 			return err
 		},
 		tracer: true,
@@ -255,15 +251,15 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 			err := errors.New("first error")
 			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
 			err = errors.Trace(err)
-			fmt.Fprintf(expected, "%s: \n", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
 			err = errors.Annotate(err, "some context")
-			fmt.Fprintf(expected, "%s: some context\n", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: some context: first error\n", errorLocationValue(c))
 			err = errors.Trace(err)
-			fmt.Fprintf(expected, "%s: \n", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: some context: first error\n", errorLocationValue(c))
 			err = errors.Annotate(err, "more context")
-			fmt.Fprintf(expected, "%s: more context\n", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: more context: some context: first error\n", errorLocationValue(c))
 			err = errors.Trace(err)
-			fmt.Fprintf(expected, "%s: ", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: more context: some context: first error", errorLocationValue(c))
 			return err
 		},
 		tracer: true,
@@ -273,15 +269,15 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 			err := newNonComparableError("first error")
 			fmt.Fprintln(expected, "first error")
 			err = errors.Trace(err)
-			fmt.Fprintf(expected, "%s: \n", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: first error\n", errorLocationValue(c))
 			err = errors.Wrap(err, newError("value error"))
 			fmt.Fprintf(expected, "%s: value error\n", errorLocationValue(c))
 			err = errors.Maskf(err, "masked")
-			fmt.Fprintf(expected, "%s: masked\n", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: masked: value error\n", errorLocationValue(c))
 			err = errors.Annotate(err, "more context")
-			fmt.Fprintf(expected, "%s: more context\n", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: more context: masked: value error\n", errorLocationValue(c))
 			err = errors.Trace(err)
-			fmt.Fprintf(expected, "%s: ", errorLocationValue(c))
+			fmt.Fprintf(expected, "%s: more context: masked: value error", errorLocationValue(c))
 			return err
 		},
 		tracer: true,
@@ -294,21 +290,13 @@ func (*functionSuite) TestErrorStack(c *gc.C) {
 		if !ok {
 			c.Logf("%#v", err)
 		}
-		tracer, ok := err.(tracer)
-		c.Check(ok, gc.Equals, test.tracer)
-		if ok {
-			stackTrace := tracer.StackTrace()
-			c.Check(stackTrace, gc.DeepEquals, strings.Split(stack, "\n"))
-		}
 	}
 }
 
 func (*functionSuite) TestFormat(c *gc.C) {
 	formatErrorExpected := &strings.Builder{}
 	err := errors.New("TestFormat")
-	fmt.Fprintf(formatErrorExpected, "%s: TestFormat\n", errorLocationValue(c))
-	err = errors.Mask(err)
-	fmt.Fprintf(formatErrorExpected, "%s: ", errorLocationValue(c))
+	fmt.Fprintf(formatErrorExpected, "%s: TestFormat", errorLocationValue(c))
 
 	for i, test := range []struct {
 		format string
@@ -380,13 +368,15 @@ func (*functionSuite) TestSetLocationWithNilError(c *gc.C) {
 }
 
 func (*functionSuite) TestSetLocation(c *gc.C) {
+	builder := strings.Builder{}
 	err := errors.New("test")
+	fmt.Fprintf(&builder, "%s: test\n", errorLocationValue(c))
 	err = errors.SetLocation(err, 1)
-	stack := fmt.Sprintf("%s: test", errorLocationValue(c))
+	fmt.Fprintf(&builder, "%s: test", errorLocationValue(c))
 	_, implements := err.(errors.Locationer)
 	c.Assert(implements, gc.Equals, true)
 
-	c.Check(errors.ErrorStack(err), gc.Equals, stack)
+	c.Check(errors.ErrorStack(err), gc.Equals, builder.String())
 }
 
 func (*functionSuite) TestHideErrorStillReturnsErrorString(c *gc.C) {

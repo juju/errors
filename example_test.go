@@ -1,4 +1,4 @@
-// Copyright 2013, 2014 Canonical Ltd.
+// Copyright 2023 Canonical Ltd.
 // Licensed under the LGPLv3, see LICENCE file for details.
 
 package errors_test
@@ -10,14 +10,33 @@ import (
 )
 
 func ExampleTrace() {
-	var err1 error = fmt.Errorf("something wicked this way comes")
-	var err2 error = nil
+	err := fmt.Errorf("Too many gophers to count")
+	tracedErr := errors.Trace(err)
 
-	// Tracing a non nil error will return an error
-	fmt.Println(errors.Trace(err1))
-	// Tracing nil will return nil
-	fmt.Println(errors.Trace(err2))
+	fmt.Println(tracedErr)
+	fmt.Println(errors.Is(tracedErr, err))
+	fmt.Println(errors.ErrorStack(tracedErr))
+	fmt.Println()
 
-	// Output: something wicked this way comes
-	// <nil>
+	tracedErr = errors.Trace(tracedErr)
+	fmt.Println(errors.ErrorStack(tracedErr))
+	fmt.Println()
+
+	tracedErr = errors.Trace(fmt.Errorf("foobar: %w", tracedErr))
+	fmt.Println(errors.ErrorStack(tracedErr))
+
+	// Output: Too many gophers to count
+	// true
+	// Too many gophers to count
+	// github.com/juju/errors_test.ExampleTrace:14: Too many gophers to count
+	//
+	// Too many gophers to count
+	// github.com/juju/errors_test.ExampleTrace:14: Too many gophers to count
+	// github.com/juju/errors_test.ExampleTrace:21: Too many gophers to count
+	//
+	// Too many gophers to count
+	// github.com/juju/errors_test.ExampleTrace:14: Too many gophers to count
+	// github.com/juju/errors_test.ExampleTrace:21: Too many gophers to count
+	// foobar: Too many gophers to count
+	// github.com/juju/errors_test.ExampleTrace:25: foobar: Too many gophers to count
 }
