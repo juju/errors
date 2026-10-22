@@ -370,42 +370,10 @@ func As(err error, target interface{}) bool {
 	return stderrors.As(err, target)
 }
 
-// AsType is a convenience method for checking and getting an error from within
-// a chain that is of type T. If no error is found of type T in the chain the
-// zero value of T is returned with false. If an error in the chain implementes
-// As(any) bool then it's As method will be called if it's type is not of type T.
-
-// AsType finds the first error in err's chain that is assignable to type T, and
-// if a match is found, returns that error value and true. Otherwise, it returns
-// T's zero value and false.
-//
-// AsType is equivalent to errors.As, but uses a type parameter and returns
-// the target, to avoid having to define a variable before the call. For
-// example, callers can replace this:
-//
-//  var pathError *fs.PathError
-//  if errors.As(err, &pathError) {
-//      fmt.Println("Failed at path:", pathError.Path)
-//  }
-//
-// With:
-//
-//  if pathError, ok := errors.AsType[*fs.PathError](err); ok {
-//      fmt.Println("Failed at path:", pathError.Path)
-//  }
+// AsType is a proxy for the AsType function in Go's standard `errors` library
+// (pkg.go.dev/errors). It finds the first error in err's tree that matches T.
 func AsType[T error](err error) (T, bool) {
-	for err != nil {
-		if e, is := err.(T); is {
-			return e, true
-		}
-		var res T
-		if x, ok := err.(interface{ As(any) bool }); ok && x.As(&res) {
-			return res, true
-		}
-		err = stderrors.Unwrap(err)
-	}
-	var zero T
-	return zero, false
+	return stderrors.AsType[T](err)
 }
 
 // SetLocation takes a given error and records where in the stack SetLocation
